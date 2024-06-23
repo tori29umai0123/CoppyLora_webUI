@@ -7,6 +7,7 @@ from PIL import Image
 from accelerate.utils import write_basic_config
 import importlib.util
 import argparse
+import socket
 import webbrowser
 import threading
 
@@ -47,6 +48,14 @@ base_b_lora = os.path.join(data_dir, "copi-ki-base-b.safetensors")
 base_cnl_lora = os.path.join(data_dir, "copi-ki-base-cnl.safetensors")
 base_bnl_lora = os.path.join(data_dir, "copi-ki-base-bnl.safetensors")
 
+def find_free_port():
+    """空いているポートを見つけて返す関数"""
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.bind(('localhost', 0))  # ランダムな空いているポートを割り当てる
+    port = sock.getsockname()[1]
+    sock.close()
+    return port
+
 def check_cuda():
     if torch.cuda.is_available():
         total_memory = torch.cuda.get_device_properties(0).total_memory / (1024 ** 3)
@@ -55,7 +64,6 @@ def check_cuda():
         else:
             Low_VRAM = False
     return Low_VRAM
-
 
 if not os.path.exists(accelerate_config):
     write_basic_config(save_location=accelerate_config)
@@ -224,9 +232,13 @@ def main():
             outputs=output_file
         )
     demo.queue()
-    url = "http://127.0.0.1:7860"  # ローカルホストとポートを指定
-    threading.Thread(target=lambda: webbrowser.open_new(url)).start()  # 新しいスレッドでブラウザを開く
-    demo.launch(share=True, server_name="0.0.0.0", server_port=7860)
+    # 空いているポートを取得
+    port = find_free_port()
+    url = f"http://127.0.0.1:{port}"  # 空いているポートを使用する
+
+    # ブラウザでURLを開く
+    threading.Thread(target=lambda: webbrowser.open_new(url)).start()
+    demo.launch(share=True, server_name="0.0.0.0", server_port=port)
 
 if __name__ == "__main__":
     main()
