@@ -30,9 +30,8 @@ pyinstaller "CoppyLora_webUI.py" ^
 --clean ^
 --copy-metadata rich ^
 --add-data "sd-scripts;.sd-scripts" ^
---add-binary "venv\Scripts\accelerate.exe;.accelerate.exe"
+--add-data "accelerate;.accelerate"
 
-xcopy /E /I /Y venv\Lib\site-packages\accelerate dist\CoppyLora_webUI\_internal\accelerate
 xcopy /E /I /Y venv\Lib\site-packages\xformers dist\CoppyLora_webUI\_internal\xformers
 xcopy /E /I /Y venv\Lib\site-packages\pytorch_lightning dist\CoppyLora_webUI\_internal\pytorch_lightning
 xcopy /E /I /Y venv\Lib\site-packages\lightning_fabric dist\CoppyLora_webUI\_internal\lightning_fabric
@@ -43,8 +42,8 @@ xcopy /E /I /Y venv\Lib\site-packages\imagesize dist\CoppyLora_webUI\_internal\i
 xcopy /E /I /Y venv\Lib\site-packages\cv2 dist\CoppyLora_webUI\_internal\cv2
 xcopy /E /I /Y train dist\CoppyLora_webUI\train
 xcopy /E /I /Y sd-scripts dist\CoppyLora_webUI\sd-scripts
+xcopy /E /I /Y accelerate dist\CoppyLora_webUI\accelerate
 copy CoppyLora_webUI_ReadMe.txt dist\CoppyLora_webUI\CoppyLora_webUI_ReadMe.txt
 copy CoppyLora_webUI_DL.cmd dist\CoppyLora_webUI\CoppyLora_webUI_DL.cmd
-copy venv\Scripts\accelerate.exe dist\CoppyLora_webUI\accelerate.exe
 
 ```
