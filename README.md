@@ -18,6 +18,10 @@ C:\CoppyLora_webUI.py（フォルダ）<br>
 ## 実行ファイル生成
 venv.cmdを実行し、以下のコマンドを入力
 ```
+
+echo from PyInstaller.utils.hooks import collect_all > hook-xformers.py && echo datas, binaries, hiddenimports = collect_all('xformers') >> hook-xformers.py && echo print(datas) >> hook-xformers.py && echo print(binaries) >> hook-xformers.py && echo print(hiddenimports) >> hook-xformers.py
+
+
 pyinstaller "CoppyLora_webUI.py" ^
 --clean ^
 --copy-metadata rich ^
