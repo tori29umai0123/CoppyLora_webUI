@@ -1,4 +1,5 @@
 import os
+#colab環境に合わせる
 os.environ['TERM'] = 'dumb'
 import gradio as gr
 import torch
@@ -87,17 +88,6 @@ def setup_paths(mode_inputs, train_data_dir):
 
     return base_lora, old_image_dir, new_image_dir, train_dir
 
-def check_cuda():
-    if torch.cuda.is_available():
-        total_memory = torch.cuda.get_device_properties(0).total_memory / (1024 ** 3)
-        if total_memory <= 15:
-            print("Low VRAM detected, using fp8_base")
-            Low_VRAM = True           
-        else:
-            print("High VRAM detected, using fp16_base")
-            Low_VRAM = False
-    return Low_VRAM
-
 def train(input_image_path, lora_name, mode_inputs):
     input_image = Image.open(input_image_path)
     base_lora, old_image_dir, new_image_dir, train_dir = setup_paths(mode_inputs, train_data_dir)
@@ -142,7 +132,12 @@ def train(input_image_path, lora_name, mode_inputs):
         "--console_log_simple",
         "--lowram"
     ]
-    subprocess.run(command, check=True)  
+    try:
+        subprocess.run(command, check=True)
+    except subprocess.CalledProcessError as e:
+        print(f"Error during training step: {e}")
+        return  # 学習中のエラーが発生した場合もここで処理を終了
+         
     #つぎの学習の為にフォルダ名を元に戻す
     os.rename(old_image_dir, new_image_dir)
     sdxl_train_network = os.path.join(sd_scripts_dir, 'sdxl_train_network.py')
@@ -183,7 +178,11 @@ def train(input_image_path, lora_name, mode_inputs):
         "--cache_text_encoder_outputs_to_disk",
         "--fp8_base"
     ]
-    subprocess.run(command, check=True)   
+    try:
+        subprocess.run(command, check=True)
+    except subprocess.CalledProcessError as e:
+        print(f"Error during training step: {e}")
+        return  # 学習中のエラーが発生した場合もここで処理を終了
 
     os.rename(new_image_dir, old_image_dir)
 
