@@ -24,7 +24,7 @@ pyinstaller "CoppyLora_webUI.py" ^
 --add-data "sd-scripts;.sd-scripts" ^
 --additional-hooks-dir="E:\CoppyLora_webUI"
 
-xcopy /E /I /Y venv\Lib\site-packages\xformers dist\CoppyLora_webUI\_internal\xformers
+xcopy /E /I /Y venv\Lib\site-packages\accelerate dist\CoppyLora_webUI\_internal\accelerate
 xcopy /E /I /Y venv\Lib\site-packages\pytorch_lightning dist\CoppyLora_webUI\_internal\pytorch_lightning
 xcopy /E /I /Y venv\Lib\site-packages\lightning_fabric dist\CoppyLora_webUI\_internal\lightning_fabric
 xcopy /E /I /Y venv\Lib\site-packages\gradio dist\CoppyLora_webUI\_internal\gradio
@@ -32,9 +32,9 @@ xcopy /E /I /Y venv\Lib\site-packages\gradio_client dist\CoppyLora_webUI\_intern
 xcopy /E /I /Y venv\Lib\site-packages\diffusers dist\CoppyLora_webUI\_internal\diffusers
 xcopy /E /I /Y venv\Lib\site-packages\imagesize dist\CoppyLora_webUI\_internal\imagesize
 xcopy /E /I /Y venv\Lib\site-packages\cv2 dist\CoppyLora_webUI\_internal\cv2
+xcopy /E /I /Y venv\Lib\site-packages\voluptuous dist\CoppyLora_webUI\_internal\voluptuous
 xcopy /E /I /Y train dist\CoppyLora_webUI\train
 xcopy /E /I /Y sd-scripts dist\CoppyLora_webUI\sd-scripts
-xcopy /E /I /Y accelerate dist\CoppyLora_webUI\accelerate
 copy CoppyLora_webUI_ReadMe.txt dist\CoppyLora_webUI\CoppyLora_webUI_ReadMe.txt
 copy CoppyLora_webUI_DL.cmd dist\CoppyLora_webUI\CoppyLora_webUI_DL.cmd
 
