@@ -183,7 +183,7 @@ def train(input_image_path, lora_name, mode_inputs):
         "--cache_text_encoder_outputs_to_disk",
         "--fp8_base"
     ]
-    subprocess.run(command1, check=True)   
+    subprocess.run(command, check=True)   
 
     os.rename(new_image_dir, old_image_dir)
 
