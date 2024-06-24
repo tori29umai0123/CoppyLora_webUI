@@ -13,11 +13,15 @@ import threading
 
 def get_appropriate_file_path():
     if getattr(sys, 'frozen', False):
-        return os.path.dirname(sys.executable)
+        path = os.path.dirname(sys.executable)
+        accelerate_path = os.path.join(path, "_internal/accelerate.exe")
+        return path, accelerate_path
     else:
-        return os.path.dirname(os.path.abspath(__file__))
+        path = os.path.dirname(os.path.abspath(__file__))
+        accelerate_path = os.path.join(path, "venv/Scripts/accelerate.exe") 
+        return path, accelerate_path
     
-path = get_appropriate_file_path()
+path,accelerate_path = get_appropriate_file_path()
 
 sd_scripts_dir = os.path.join(path, 'sd-scripts')
 networks_path = os.path.join(sd_scripts_dir, 'networks')
@@ -26,6 +30,7 @@ library_path = os.path.join(sd_scripts_dir, 'library')
 sys.path.append(sd_scripts_dir)
 sys.path.append(networks_path)
 sys.path.append(library_path)
+sys.path.append(accelerate_path)
 print(sys.path)
 
 # モジュールのパスを直接指定してインポート
@@ -36,6 +41,7 @@ spec_merge.loader.exec_module(merge)
 spec_resize = importlib.util.spec_from_file_location("resize", os.path.join(networks_path, 'resize_lora.py'))
 resize = importlib.util.module_from_spec(spec_resize)
 spec_resize.loader.exec_module(resize)
+
 
 data_dir = os.path.join(path, "data")
 train_data_dir = os.path.join(path, "train")
@@ -60,8 +66,10 @@ def check_cuda():
     if torch.cuda.is_available():
         total_memory = torch.cuda.get_device_properties(0).total_memory / (1024 ** 3)
         if total_memory <= 15:
+            print("Low VRAM detected, using fp8_base")
             Low_VRAM = True           
         else:
+            print("High VRAM detected, using fp16_base")
             Low_VRAM = False
     return Low_VRAM
 
@@ -99,83 +107,46 @@ def train(input_image_path, lora_name, mode_inputs):
         resize_image = input_image.resize((size, size))
         resize_image.save(os.path.join(image_dir, f"{size}.png"))
 
+    command1 = [
+        accelerate_path, "launch", "--config_file", accelerate_config, sdxl_train_network,
+        "--pretrained_model_name_or_path", SDXL_model,
+        "--train_data_dir", train_dir,
+        "--output_dir", data_dir,
+        "--output_name", "copi-ki-kari",
+        "--max_train_steps", "1000",
+        "--network_module", "networks.lora",
+        "--xformers",
+        "--gradient_checkpointing",
+        "--persistent_data_loader_workers",
+        "--max_data_loader_n_workers", "12",
+        "--enable_bucket",
+        "--save_model_as", "safetensors",
+        "--lr_scheduler_num_cycles", "4",
+        "--learning_rate", "1e-4",
+        "--resolution", "1024,1024",
+        "--train_batch_size", "2",
+        "--network_dim", "16",
+        "--network_alpha", "16",
+        "--optimizer_type", "AdamW8bit",
+        "--mixed_precision", "fp16",
+        "--save_precision", "fp16",
+        "--lr_scheduler", "constant",
+        "--bucket_no_upscale",
+        "--min_bucket_reso", "64",
+        "--max_bucket_reso", "1024",
+        "--caption_extension", ".txt",
+        "--seed", "42",
+        "--network_train_unet_only",
+        "--no_half_vae",
+        "--cache_latents",
+        "--cache_latents_to_disk",
+        "--cache_text_encoder_outputs",
+        "--cache_text_encoder_outputs_to_disk",
+    ]
     Low_VRAM = check_cuda()
     if Low_VRAM:
-        command1 = [
-            "accelerate", "launch", "--config_file", accelerate_config, sdxl_train_network,
-            "--pretrained_model_name_or_path", SDXL_model,
-            "--train_data_dir", train_dir,
-            "--output_dir", data_dir,
-            "--output_name", "copi-ki-base",
-            "--max_train_steps", "1000",
-            "--network_module", "networks.lora",
-            "--xformers",
-            "--gradient_checkpointing",
-            "--persistent_data_loader_workers",
-            "--max_data_loader_n_workers", "12",
-            "--enable_bucket",
-            "--save_model_as", "safetensors",
-            "--lr_scheduler_num_cycles", "4",
-            "--learning_rate", "1e-4",
-            "--resolution", "1024,1024",
-            "--train_batch_size", "2",
-            "--network_dim", "16",
-            "--network_alpha", "16",
-            "--optimizer_type", "AdamW8bit",
-            "--mixed_precision", "fp16",
-            "--save_precision", "fp16",
-            "--lr_scheduler", "constant",
-            "--bucket_no_upscale",
-            "--min_bucket_reso", "64",
-            "--max_bucket_reso", "1024",
-            "--caption_extension", ".txt",
-            "--seed", "42",
-            "--network_train_unet_only",
-            "--no_half_vae",
-            "--cache_latents",
-            "--cache_latents_to_disk",
-            "--cache_text_encoder_outputs",
-            "--cache_text_encoder_outputs_to_disk"
-        ]
+        command1.append("--fp8_base")
 
-    else:
-        command1 = [
-            "accelerate", "launch", "--config_file", accelerate_config, sdxl_train_network,
-            "--pretrained_model_name_or_path", SDXL_model,
-            "--train_data_dir", train_dir,
-            "--output_dir", data_dir,
-            "--output_name", "copi-ki-kari",
-            "--max_train_steps", "1000",
-            "--network_module", "networks.lora",
-            "--xformers",
-            "--gradient_checkpointing",
-            "--persistent_data_loader_workers",
-            "--max_data_loader_n_workers", "12",
-            "--enable_bucket",
-            "--save_model_as", "safetensors",
-            "--lr_scheduler_num_cycles", "4",
-            "--learning_rate", "1e-4",
-            "--resolution", "1024,1024",
-            "--train_batch_size", "2",
-            "--network_dim", "16",
-            "--network_alpha", "16",
-            "--optimizer_type", "AdamW8bit",
-            "--mixed_precision", "fp16",
-            "--save_precision", "fp16",
-            "--lr_scheduler", "constant",
-            "--bucket_no_upscale",
-            "--min_bucket_reso", "64",
-            "--max_bucket_reso", "1024",
-            "--caption_extension", ".txt",
-            "--seed", "42",
-            "--network_train_unet_only",
-            "--no_half_vae",
-            "--cache_latents",
-            "--cache_latents_to_disk",
-            "--cache_text_encoder_outputs",
-            "--cache_text_encoder_outputs_to_disk",
-            "--fp8_base"
-        ]
     subprocess.run(command1, check=True, cwd=sd_scripts_dir)   
 
     kari_lora = os.path.join(data_dir, "copi-ki-kari.safetensors")
@@ -238,7 +209,7 @@ def main():
 
     # ブラウザでURLを開く
     threading.Thread(target=lambda: webbrowser.open_new(url)).start()
-    demo.launch(share=True, server_name="0.0.0.0", server_port=port)
+    demo.launch(share=False, server_name="0.0.0.0", server_port=port)
 
 if __name__ == "__main__":
     main()
