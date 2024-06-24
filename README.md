@@ -4,11 +4,11 @@
 ```
 python -m venv venv
 .\venv\Scripts\activate
-git clone https://github.com/kohya-ss/sd-scripts.git
-cd sd-scripts
-pip install torch==2.1.2 torchvision==0.16.2 --index-url https://download.pytorch.org/whl/cu121
+pip install torch==2.1.2 torchvision==0.16.2 --index-url https://download.pytorch.org/whl/cu118
 pip install --upgrade -r requirements.txt
-pip install xformers==0.0.23.post1 --index-url https://download.pytorch.org/whl/cu121
+pip install xformers==0.0.23.post1 --index-url https://download.pytorch.org/whl/cu118
+pip install -U bitsandbytes==30.43.1
+pip install rich==13.7.1
 pip install gradio==3.41.2
 pip install pyinstaller
 ```
@@ -30,7 +30,7 @@ pyinstaller "CoppyLora_webUI.py" ^
 --clean ^
 --copy-metadata rich ^
 --add-data "sd-scripts;.sd-scripts" ^
---add-data "accelerate;.accelerate"
+--additional-hooks-dir="CoppyLora_webUI"
 
 xcopy /E /I /Y venv\Lib\site-packages\xformers dist\CoppyLora_webUI\_internal\xformers
 xcopy /E /I /Y venv\Lib\site-packages\pytorch_lightning dist\CoppyLora_webUI\_internal\pytorch_lightning
