@@ -1,7 +1,8 @@
+import os
+os.environ['TERM'] = 'dumb'
 import gradio as gr
 import torch
 import subprocess
-import os
 import sys
 from PIL import Image
 import importlib.util
@@ -9,6 +10,7 @@ import argparse
 import socket
 import webbrowser
 import threading
+import socket
 
 def get_appropriate_file_path():
     if getattr(sys, 'frozen', False):
@@ -23,10 +25,12 @@ path = get_appropriate_file_path()
 sd_scripts_dir = os.path.join(path, 'sd-scripts')
 networks_path = os.path.join(sd_scripts_dir, 'networks')
 library_path = os.path.join(sd_scripts_dir, 'library')
+tools_path = os.path.join(sd_scripts_dir, 'tools')
 # パスをシステムパスに追加
 sys.path.append(sd_scripts_dir)
 sys.path.append(networks_path)
 sys.path.append(library_path)
+sys.path.append(tools_path)
 
 # モジュールのパスを直接指定してインポート
 spec_merge = importlib.util.spec_from_file_location("merge", os.path.join(networks_path, 'sdxl_merge_lora.py'))
@@ -36,6 +40,10 @@ spec_merge.loader.exec_module(merge)
 spec_resize = importlib.util.spec_from_file_location("resize", os.path.join(networks_path, 'resize_lora.py'))
 resize = importlib.util.module_from_spec(spec_resize)
 spec_resize.loader.exec_module(resize)
+
+spec_cache_latents = importlib.util.spec_from_file_location("cache_latents", os.path.join(tools_path, 'cache_latents.py'))
+cache_latents = importlib.util.module_from_spec(spec_cache_latents)
+spec_cache_latents.loader.exec_module(cache_latents)
 
 spec_sdxl_train_network = importlib.util.spec_from_file_location("sdxl_train_network", os.path.join(sd_scripts_dir, 'sdxl_train_network.py'))
 sdxl_train_network = importlib.util.module_from_spec(spec_sdxl_train_network)
@@ -51,13 +59,36 @@ base_b_lora = os.path.join(data_dir, "copi-ki-base-b.safetensors")
 base_cnl_lora = os.path.join(data_dir, "copi-ki-base-cnl.safetensors")
 base_bnl_lora = os.path.join(data_dir, "copi-ki-base-bnl.safetensors")
 
-def find_free_port():
-    """空いているポートを見つけて返す関数"""
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.bind(('localhost', 0))  # ランダムな空いているポートを割り当てる
-    port = sock.getsockname()[1]
-    sock.close()
-    return port
+def find_free_port(start_port=7860):
+    """指定したポートから開始して空いているポートを見つけて返す関数"""
+    for port in range(start_port, 65535):  # 65535はポート番号の最大値
+        try:
+            # ソケットを作成して指定のポートにバインドを試みる
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.bind(('localhost', port))
+            sock.close()
+            return port  # バインドに成功したらそのポート番号を返す
+        except OSError:
+            # バインドに失敗した場合（ポートが使用中の場合）、次のポートを試す
+            continue
+    raise RuntimeError("No free ports available.")  # 空いているポートが見つからなかった場合
+
+def setup_paths(mode_inputs, train_data_dir):
+    if mode_inputs in ["Lineart", "Grayscale_noline"]:
+        base_lora = base_c_lora
+    elif mode_inputs == "Grayscale":
+        base_lora = base_cnl_lora
+    elif mode_inputs == "Color":
+        base_lora = base_bnl_lora
+    elif mode_inputs == "Color_noline":
+        base_lora = base_b_lora
+
+    dir_type = mode_inputs.lower().replace('_', '')
+    old_image_dir = os.path.join(train_data_dir, f"{dir_type}/1")
+    new_image_dir = os.path.join(train_data_dir, f"{dir_type}/4000")
+    train_dir = os.path.join(train_data_dir, dir_type)
+
+    return base_lora, old_image_dir, new_image_dir, train_dir
 
 def check_cuda():
     if torch.cuda.is_available():
@@ -72,34 +103,55 @@ def check_cuda():
 
 def train(input_image_path, lora_name, mode_inputs):
     input_image = Image.open(input_image_path)
-    if mode_inputs == "Lineart":
-        base_lora = base_c_lora
-        image_dir = os.path.join(train_data_dir, "lineart/4000")
-        train_dir = os.path.join(train_data_dir, "lineart")
+    base_lora, old_image_dir, new_image_dir, train_dir = setup_paths(mode_inputs, train_data_dir)
 
-    if mode_inputs == "Grayscale":
-        base_lora = base_cnl_lora
-        image_dir = os.path.join(train_data_dir, "grayscale/4000")
-        train_dir = os.path.join(train_data_dir, "grayscale")
-
-    if mode_inputs == "Grayscale_noline":
-        base_lora = base_c_lora
-        image_dir = os.path.join(train_data_dir, "grayscale_noline/4000")
-        train_dir = os.path.join(train_data_dir, "grayscale_noline")
-
-    if mode_inputs == "Color":
-        base_lora = base_bnl_lora
-        image_dir = os.path.join(train_data_dir, "grayscale/4000")
-        train_dir = os.path.join(train_data_dir, "grayscale")
-
-    if mode_inputs == "Color_noline":
-        base_lora = base_b_lora
-        image_dir = os.path.join(train_data_dir, "color_noline/4000")
-        train_dir = os.path.join(train_data_dir, "color_noline")
+    #もしold_image_dirがなかったら、new_image_dirをold_image_dirにリネームする
+    if not os.path.exists(old_image_dir):
+        os.rename(new_image_dir, old_image_dir)
 
     for size in [1024, 768, 512]:
         resize_image = input_image.resize((size, size))
-        resize_image.save(os.path.join(image_dir, f"{size}.png"))
+        resize_image.save(os.path.join(old_image_dir, f"{size}.png"))
+
+    #学習前にcache_latentsを作る
+    args_dict = {
+        "pretrained_model_name_or_path": SDXL_model,
+        "train_data_dir": train_dir,
+        "output_dir": data_dir,
+        "output_name": "copi-ki-kari",
+        "max_train_steps": 1000,
+        "xformers": True,
+        "gradient_checkpointing": True,
+        "persistent_data_loader_workers": True,
+        "max_data_loader_n_workers": 12,
+        "enable_bucket": True,
+        "resolution": "1024,1024",
+        "train_batch_size": 2,
+        "mixed_precision": "fp16",
+        "save_precision": "fp16",
+        "bucket_no_upscale": True,
+        "min_bucket_reso": 64,
+        "max_bucket_reso": 1024,
+        "caption_extension": ".txt",
+        "seed": 42,
+        "no_half_vae": True,
+        "cache_latents": True,
+        "cache_latents_to_disk": True,
+        "sdxl": True,
+        "skip_existing": True,
+        "console_log_simple": True,
+        "lowram": True
+    }
+
+    parser = cache_latents.setup_parser()
+    args = parser.parse_args()
+    args = cache_latents.train_util.read_config_from_file(args, parser)
+    args2 = argparse.Namespace(**args_dict)
+    for key, value in vars(args2).items():
+        setattr(args, key, value)
+    cache_latents.cache_to_disk(args)
+    #つぎの学習の為にフォルダ名を元に戻す
+    os.rename(old_image_dir, new_image_dir)
 
     args_dict = {
         "pretrained_model_name_or_path": SDXL_model,
@@ -150,6 +202,8 @@ def train(input_image_path, lora_name, mode_inputs):
         setattr(args, key, value)
     trainer = sdxl_train_network.SdxlNetworkTrainer()
     trainer.train(args)
+
+    os.rename(new_image_dir, old_image_dir)
 
     kari_lora = os.path.join(data_dir, "copi-ki-kari.safetensors")
     output_dir = os.path.join(path, "output")
