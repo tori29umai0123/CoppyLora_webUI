@@ -4,7 +4,6 @@ import subprocess
 import os
 import sys
 from PIL import Image
-from accelerate.utils import write_basic_config
 import importlib.util
 import argparse
 import socket
@@ -14,14 +13,12 @@ import threading
 def get_appropriate_file_path():
     if getattr(sys, 'frozen', False):
         path = os.path.dirname(sys.executable)
-        accelerate_path = os.path.join(path, "_internal/accelerate.exe")
-        return path, accelerate_path
+        return path
     else:
         path = os.path.dirname(os.path.abspath(__file__))
-        accelerate_path = os.path.join(path, "venv/Scripts/accelerate.exe") 
-        return path, accelerate_path
+        return path
     
-path,accelerate_path = get_appropriate_file_path()
+path = get_appropriate_file_path()
 
 sd_scripts_dir = os.path.join(path, 'sd-scripts')
 networks_path = os.path.join(sd_scripts_dir, 'networks')
@@ -30,8 +27,6 @@ library_path = os.path.join(sd_scripts_dir, 'library')
 sys.path.append(sd_scripts_dir)
 sys.path.append(networks_path)
 sys.path.append(library_path)
-sys.path.append(accelerate_path)
-print(sys.path)
 
 # モジュールのパスを直接指定してインポート
 spec_merge = importlib.util.spec_from_file_location("merge", os.path.join(networks_path, 'sdxl_merge_lora.py'))
@@ -42,13 +37,15 @@ spec_resize = importlib.util.spec_from_file_location("resize", os.path.join(netw
 resize = importlib.util.module_from_spec(spec_resize)
 spec_resize.loader.exec_module(resize)
 
+spec_sdxl_train_network = importlib.util.spec_from_file_location("sdxl_train_network", os.path.join(sd_scripts_dir, 'sdxl_train_network.py'))
+sdxl_train_network = importlib.util.module_from_spec(spec_sdxl_train_network)
+spec_sdxl_train_network.loader.exec_module(sdxl_train_network)
+
 
 data_dir = os.path.join(path, "data")
 train_data_dir = os.path.join(path, "train")
 SDXL_model = os.path.join(data_dir, "animagine-xl-3.1.safetensors")
 base_image_path = os.path.join(data_dir, "base_c_1024.png")
-accelerate_config = os.path.join(data_dir, "accelerate_config.yaml")
-sdxl_train_network= os.path.join(sd_scripts_dir, "sdxl_train_network.py")
 base_c_lora = os.path.join(data_dir, "copi-ki-base-c.safetensors")
 base_b_lora = os.path.join(data_dir, "copi-ki-base-b.safetensors")
 base_cnl_lora = os.path.join(data_dir, "copi-ki-base-cnl.safetensors")
@@ -72,9 +69,6 @@ def check_cuda():
             print("High VRAM detected, using fp16_base")
             Low_VRAM = False
     return Low_VRAM
-
-if not os.path.exists(accelerate_config):
-    write_basic_config(save_location=accelerate_config)
 
 def train(input_image_path, lora_name, mode_inputs):
     input_image = Image.open(input_image_path)
@@ -107,47 +101,55 @@ def train(input_image_path, lora_name, mode_inputs):
         resize_image = input_image.resize((size, size))
         resize_image.save(os.path.join(image_dir, f"{size}.png"))
 
-    command1 = [
-        accelerate_path, "launch", "--config_file", accelerate_config, sdxl_train_network,
-        "--pretrained_model_name_or_path", SDXL_model,
-        "--train_data_dir", train_dir,
-        "--output_dir", data_dir,
-        "--output_name", "copi-ki-kari",
-        "--max_train_steps", "1000",
-        "--network_module", "networks.lora",
-        "--xformers",
-        "--gradient_checkpointing",
-        "--persistent_data_loader_workers",
-        "--max_data_loader_n_workers", "12",
-        "--enable_bucket",
-        "--save_model_as", "safetensors",
-        "--lr_scheduler_num_cycles", "4",
-        "--learning_rate", "1e-4",
-        "--resolution", "1024,1024",
-        "--train_batch_size", "2",
-        "--network_dim", "16",
-        "--network_alpha", "16",
-        "--optimizer_type", "AdamW8bit",
-        "--mixed_precision", "fp16",
-        "--save_precision", "fp16",
-        "--lr_scheduler", "constant",
-        "--bucket_no_upscale",
-        "--min_bucket_reso", "64",
-        "--max_bucket_reso", "1024",
-        "--caption_extension", ".txt",
-        "--seed", "42",
-        "--network_train_unet_only",
-        "--no_half_vae",
-        "--cache_latents",
-        "--cache_latents_to_disk",
-        "--cache_text_encoder_outputs",
-        "--cache_text_encoder_outputs_to_disk",
-    ]
+    args_dict = {
+        "pretrained_model_name_or_path": SDXL_model,
+        "train_data_dir": train_dir,
+        "output_dir": data_dir,
+        "output_name": "copi-ki-kari",
+        "max_train_steps": 1000,
+        "network_module": "networks.lora",
+        "xformers": True,
+        "gradient_checkpointing": True,
+        "persistent_data_loader_workers": True,
+        "max_data_loader_n_workers": 12,
+        "enable_bucket": True,
+        "save_model_as": "safetensors",
+        "lr_scheduler_num_cycles": 4,
+        "learning_rate": 1e-4,
+        "resolution": "1024,1024",
+        "train_batch_size": 2,
+        "network_dim": 16,
+        "network_alpha": 16,
+        "optimizer_type": "AdamW8bit",
+        "mixed_precision": "fp16",
+        "save_precision": "fp16",
+        "lr_scheduler": "constant",
+        "bucket_no_upscale": True,
+        "min_bucket_reso": 64,
+        "max_bucket_reso": 1024,
+        "caption_extension": ".txt",
+        "seed": 42,
+        "network_train_unet_only": True,
+        "no_half_vae": True,
+        "cache_latents": True,
+        "cache_latents_to_disk": True,
+        "cache_text_encoder_outputs": True,
+        "cache_text_encoder_outputs_to_disk": True,
+    }
+
     Low_VRAM = check_cuda()
     if Low_VRAM:
-        command1.append("--fp8_base")
-
-    subprocess.run(command1, check=True, cwd=sd_scripts_dir)   
+        args_dict.append({"fp8_base": True})   
+ 
+    parser = sdxl_train_network.setup_parser()
+    args = parser.parse_args()
+    sdxl_train_network.train_util.verify_command_line_training_args(args)
+    args = sdxl_train_network.train_util.read_config_from_file(args, parser)
+    args2 = argparse.Namespace(**args_dict)
+    for key, value in vars(args2).items():
+        setattr(args, key, value)
+    trainer = sdxl_train_network.SdxlNetworkTrainer()
+    trainer.train(args)
 
     kari_lora = os.path.join(data_dir, "copi-ki-kari.safetensors")
     output_dir = os.path.join(path, "output")
