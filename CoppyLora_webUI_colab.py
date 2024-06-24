@@ -116,8 +116,8 @@ def train(input_image_path, lora_name, mode_inputs):
     command = [
         "accelerate", "launch", "--config_file", accelerate_config, cache_latents,
         "--pretrained_model_name_or_path", SDXL_model,
-        "--train_data_dir", train_data_dir,
-        "--output_dir", lora_dir,
+        "--train_data_dir", train_dir,
+        "--output_dir", data_dir,
         "--output_name", "copi-ki-kari",
         "--max_train_steps", "1000",
         "--xformers",
