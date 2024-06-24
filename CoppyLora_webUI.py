@@ -191,7 +191,7 @@ def train(input_image_path, lora_name, mode_inputs):
 
     Low_VRAM = check_cuda()
     if Low_VRAM:
-        args_dict.append({"fp8_base": True})   
+        args_dict["fp8_base"] = True
  
     parser = sdxl_train_network.setup_parser()
     args = parser.parse_args()
@@ -265,7 +265,9 @@ def main():
 
     # ブラウザでURLを開く
     threading.Thread(target=lambda: webbrowser.open_new(url)).start()
-    demo.launch(share=False, server_name="0.0.0.0", server_port=port)
+    is_colab = 'COLAB_GPU' in os.environ
+    share_setting = True if is_colab else False
+    demo.launch(share=share_setting, server_name="0.0.0.0", server_port=port)
 
 if __name__ == "__main__":
     main()
