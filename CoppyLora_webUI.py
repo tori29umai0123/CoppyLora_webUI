@@ -1,5 +1,4 @@
 import os
-os.environ['TERM'] = 'dumb'
 import gradio as gr
 import torch
 import subprocess
@@ -41,15 +40,6 @@ spec_resize = importlib.util.spec_from_file_location("resize", os.path.join(netw
 resize = importlib.util.module_from_spec(spec_resize)
 spec_resize.loader.exec_module(resize)
 
-spec_cache_latents = importlib.util.spec_from_file_location("cache_latents", os.path.join(tools_path, 'cache_latents.py'))
-cache_latents = importlib.util.module_from_spec(spec_cache_latents)
-spec_cache_latents.loader.exec_module(cache_latents)
-
-spec_sdxl_train_network = importlib.util.spec_from_file_location("sdxl_train_network", os.path.join(sd_scripts_dir, 'sdxl_train_network.py'))
-sdxl_train_network = importlib.util.module_from_spec(spec_sdxl_train_network)
-spec_sdxl_train_network.loader.exec_module(sdxl_train_network)
-
-
 data_dir = os.path.join(path, "data")
 train_data_dir = os.path.join(path, "train")
 SDXL_model = os.path.join(data_dir, "animagine-xl-3.1.safetensors")
@@ -58,6 +48,19 @@ base_c_lora = os.path.join(data_dir, "copi-ki-base-c.safetensors")
 base_b_lora = os.path.join(data_dir, "copi-ki-base-b.safetensors")
 base_cnl_lora = os.path.join(data_dir, "copi-ki-base-cnl.safetensors")
 base_bnl_lora = os.path.join(data_dir, "copi-ki-base-bnl.safetensors")
+
+def find_accelerate():
+    try:
+        # 'where accelerate' コマンドを実行
+        result = subprocess.run(["where", "accelerate"], capture_output=True, text=True, check=True)
+        # コマンドの実行結果を出力
+        return result.stdout
+    except subprocess.CalledProcessError as e:
+        # コマンドが失敗した場合（accelerateが見つからないなど）
+        return f"Error: {e}"
+
+output = find_accelerate()
+print(output)
 
 def find_free_port(start_port=7860):
     """指定したポートから開始して空いているポートを見つけて返す関数"""
@@ -84,11 +87,10 @@ def setup_paths(mode_inputs, train_data_dir):
         base_lora = base_b_lora
 
     dir_type = mode_inputs.lower().replace('_', '')
-    old_image_dir = os.path.join(train_data_dir, f"{dir_type}/1")
-    new_image_dir = os.path.join(train_data_dir, f"{dir_type}/4000")
+    image_dir = os.path.join(train_data_dir, f"{dir_type}/4000")
     train_dir = os.path.join(train_data_dir, dir_type)
 
-    return base_lora, old_image_dir, new_image_dir, train_dir
+    return base_lora, image_dir, train_dir
 
 def check_cuda():
     if torch.cuda.is_available():
@@ -103,55 +105,15 @@ def check_cuda():
 
 def train(input_image_path, lora_name, mode_inputs):
     input_image = Image.open(input_image_path)
-    base_lora, old_image_dir, new_image_dir, train_dir = setup_paths(mode_inputs, train_data_dir)
-
-    #もしold_image_dirがなかったら、new_image_dirをold_image_dirにリネームする
-    if not os.path.exists(old_image_dir):
-        os.rename(new_image_dir, old_image_dir)
+    base_lora, image_dir, train_dir = setup_paths(mode_inputs, train_data_dir)
 
     for size in [1024, 768, 512]:
         resize_image = input_image.resize((size, size))
-        resize_image.save(os.path.join(old_image_dir, f"{size}.png"))
+        resize_image.save(os.path.join(image_dir, f"{size}.png"))
 
-    #学習前にcache_latentsを作る
-    args_dict = {
-        "pretrained_model_name_or_path": SDXL_model,
-        "train_data_dir": train_dir,
-        "output_dir": data_dir,
-        "output_name": "copi-ki-kari",
-        "max_train_steps": 1000,
-        "xformers": True,
-        "gradient_checkpointing": True,
-        "persistent_data_loader_workers": True,
-        "max_data_loader_n_workers": 12,
-        "enable_bucket": True,
-        "resolution": "1024,1024",
-        "train_batch_size": 2,
-        "mixed_precision": "fp16",
-        "save_precision": "fp16",
-        "bucket_no_upscale": True,
-        "min_bucket_reso": 64,
-        "max_bucket_reso": 1024,
-        "caption_extension": ".txt",
-        "seed": 42,
-        "no_half_vae": True,
-        "cache_latents": True,
-        "cache_latents_to_disk": True,
-        "sdxl": True,
-        "skip_existing": True,
-        "console_log_simple": True,
-        "lowram": True
-    }
-
-    parser = cache_latents.setup_parser()
-    args = parser.parse_args()
-    args = cache_latents.train_util.read_config_from_file(args, parser)
-    args2 = argparse.Namespace(**args_dict)
-    for key, value in vars(args2).items():
-        setattr(args, key, value)
-    cache_latents.cache_to_disk(args)
-    #つぎの学習の為にフォルダ名を元に戻す
-    os.rename(old_image_dir, new_image_dir)
+    spec_sdxl_train_network = importlib.util.spec_from_file_location("sdxl_train_network", os.path.join(sd_scripts_dir, 'sdxl_train_network.py'))
+    sdxl_train_network = importlib.util.module_from_spec(spec_sdxl_train_network)
+    spec_sdxl_train_network.loader.exec_module(sdxl_train_network)
 
     args_dict = {
         "pretrained_model_name_or_path": SDXL_model,
@@ -163,7 +125,7 @@ def train(input_image_path, lora_name, mode_inputs):
         "xformers": True,
         "gradient_checkpointing": True,
         "persistent_data_loader_workers": True,
-        "max_data_loader_n_workers": 12,
+        # "max_data_loader_n_workers": 12,
         "enable_bucket": True,
         "save_model_as": "safetensors",
         "lr_scheduler_num_cycles": 4,
@@ -202,8 +164,6 @@ def train(input_image_path, lora_name, mode_inputs):
         setattr(args, key, value)
     trainer = sdxl_train_network.SdxlNetworkTrainer()
     trainer.train(args)
-
-    os.rename(new_image_dir, old_image_dir)
 
     kari_lora = os.path.join(data_dir, "copi-ki-kari.safetensors")
     output_dir = os.path.join(path, "output")
