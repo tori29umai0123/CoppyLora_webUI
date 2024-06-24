@@ -19,12 +19,13 @@ if (!(Test-Path -Path "sd-scripts")) {
     git clone https://github.com/kohya-ss/sd-scripts.git
 }
 cd sd-scripts
-git checkout "bfb352bc433326a77aca3124248331eb60c49e8c"
+git checkout "25f961bc779bc79aef440813e3e8e92244ac5739"
 
 # 必要なパッケージをインストール
-pip install --upgrade -r requirements.txt
 pip install torch==2.1.2 torchvision==0.16.2 --index-url https://download.pytorch.org/whl/cu121
+pip install --upgrade -r requirements.txt
 pip install xformers==0.0.23.post1 --index-url https://download.pytorch.org/whl/cu121
+pip install -U bitsandbytes
 pip install gradio==3.41.2
 pip install pyinstaller
 
