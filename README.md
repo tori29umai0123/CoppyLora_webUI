@@ -22,7 +22,7 @@ pyinstaller "CoppyLora_webUI.py" ^
 --clean ^
 --copy-metadata rich ^
 --add-data "sd-scripts;.sd-scripts" ^
---additional-hooks-dir="CoppyLora_webUI"
+--additional-hooks-dir="E:\CoppyLora_webUI"
 
 xcopy /E /I /Y venv\Lib\site-packages\xformers dist\CoppyLora_webUI\_internal\xformers
 xcopy /E /I /Y venv\Lib\site-packages\pytorch_lightning dist\CoppyLora_webUI\_internal\pytorch_lightning
