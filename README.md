@@ -1,26 +1,15 @@
 # CoppyLora_webUI
 
-# インストール
-```
-python -m venv venv
-.\venv\Scripts\activate
-pip install torch==2.1.2 torchvision==0.16.2 --index-url https://download.pytorch.org/whl/cu118
-pip install --upgrade -r requirements.txt
-pip install xformers==0.0.23.post1 --index-url https://download.pytorch.org/whl/cu118
-pip install -U bitsandbytes==30.43.1
-pip install rich==13.7.1
-pip install gradio==3.41.2
-pip install pyinstaller
 ```
 # ビルド設定（開発者向け）
 python 3.11.xで開発されています。
 sd-scriptsライブラリを使用しているため、ビルド時にはバージョンを合わせた上で以下の手順が必要です。
 
-①AI_Assistant_install.ps1を実行してインストール<br>
+①CoppyLora_webUI.py.ps1を実行してインストール<br>
 ②セキュリティーソフトの設定で、フォルダと実行ファイル名を除外リストに追加する。<br>
 例：Windows Defenderの場合、Windows セキュリティ→ウイルスと脅威の防止→ウイルスと脅威の防止の設定→設定の管理→除外<br>
-AI_Assistant.exe(プロセス)<br>
-C:\AI_Assistant（フォルダ）<br>
+CoppyLora_webUI.py.exe(プロセス)<br>
+C:\CoppyLora_webUI.py（フォルダ）<br>
 のように指定する。<br>
 
 ## 実行ファイル生成
