@@ -113,7 +113,6 @@ def train(input_image_path, lora_name, mode_inputs):
         "--xformers",
         "--gradient_checkpointing",
         "--persistent_data_loader_workers",
-        "--max_data_loader_n_workers", "12",
         "--enable_bucket",
         "--resolution", "1024,1024",
         "--train_batch_size", "2",
@@ -136,8 +135,8 @@ def train(input_image_path, lora_name, mode_inputs):
         subprocess.run(command, check=True)
     except subprocess.CalledProcessError as e:
         print(f"Error during training step: {e}")
-        return  # 学習中のエラーが発生した場合もここで処理を終了
-         
+        return 
+
     #つぎの学習の為にフォルダ名を元に戻す
     os.rename(old_image_dir, new_image_dir)
     sdxl_train_network = os.path.join(sd_scripts_dir, 'sdxl_train_network.py')
@@ -152,7 +151,6 @@ def train(input_image_path, lora_name, mode_inputs):
         "--xformers",
         "--gradient_checkpointing",
         "--persistent_data_loader_workers",
-        "--max_data_loader_n_workers", "12",
         "--enable_bucket",
         "--save_model_as", "safetensors",
         "--lr_scheduler_num_cycles", "4",
@@ -176,7 +174,8 @@ def train(input_image_path, lora_name, mode_inputs):
         "--cache_latents_to_disk",
         "--cache_text_encoder_outputs",
         "--cache_text_encoder_outputs_to_disk",
-        "--fp8_base"
+        "--console_log_simple",
+        "--lowram"
     ]
     try:
         subprocess.run(command, check=True)
