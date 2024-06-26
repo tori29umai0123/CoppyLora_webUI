@@ -1,7 +1,8 @@
 import os
+# ログでエラーが出るので、環境変数を設定
+os.environ['TERM'] = 'dumb'
 import gradio as gr
 import torch
-import subprocess
 import sys
 from PIL import Image
 import importlib.util
@@ -10,21 +11,22 @@ import socket
 import webbrowser
 import threading
 import socket
+import toml
 
-def get_appropriate_file_path():
-    if getattr(sys, 'frozen', False):
-        path = os.path.dirname(sys.executable)
-        return path
-    else:
-        path = os.path.dirname(os.path.abspath(__file__))
-        return path
-    
-path = get_appropriate_file_path()
+# ビルドしているかしていないかでパスを変更
+if getattr(sys, 'frozen', False):
+    path = os.path.dirname(sys.executable)
+    sd_scripts_dir = os.path.join(path, "_internal", 'sd-scripts')
+    networks_path = os.path.join(sd_scripts_dir, 'networks')
+    library_path = os.path.join(sd_scripts_dir, 'library')
+    tools_path = os.path.join(sd_scripts_dir, 'tools')
+else:
+    path = os.path.dirname(os.path.abspath(__file__))
+    sd_scripts_dir = os.path.join(path, 'sd-scripts')
+    networks_path = os.path.join(sd_scripts_dir, 'networks')
+    library_path = os.path.join(sd_scripts_dir, 'library')
+    tools_path = os.path.join(sd_scripts_dir, 'tools')
 
-sd_scripts_dir = os.path.join(path, 'sd-scripts')
-networks_path = os.path.join(sd_scripts_dir, 'networks')
-library_path = os.path.join(sd_scripts_dir, 'library')
-tools_path = os.path.join(sd_scripts_dir, 'tools')
 # パスをシステムパスに追加
 sys.path.append(sd_scripts_dir)
 sys.path.append(networks_path)
@@ -40,27 +42,19 @@ spec_resize = importlib.util.spec_from_file_location("resize", os.path.join(netw
 resize = importlib.util.module_from_spec(spec_resize)
 spec_resize.loader.exec_module(resize)
 
-data_dir = os.path.join(path, "data")
-train_data_dir = os.path.join(path, "train")
-SDXL_model = os.path.join(data_dir, "animagine-xl-3.1.safetensors")
-base_image_path = os.path.join(data_dir, "base_c_1024.png")
-base_c_lora = os.path.join(data_dir, "copi-ki-base-c.safetensors")
-base_b_lora = os.path.join(data_dir, "copi-ki-base-b.safetensors")
-base_cnl_lora = os.path.join(data_dir, "copi-ki-base-cnl.safetensors")
-base_bnl_lora = os.path.join(data_dir, "copi-ki-base-bnl.safetensors")
-
-def find_accelerate():
-    try:
-        # 'where accelerate' コマンドを実行
-        result = subprocess.run(["where", "accelerate"], capture_output=True, text=True, check=True)
-        # コマンドの実行結果を出力
-        return result.stdout
-    except subprocess.CalledProcessError as e:
-        # コマンドが失敗した場合（accelerateが見つからないなど）
-        return f"Error: {e}"
-
-output = find_accelerate()
-print(output)
+config_file = os.path.join(path, "config.toml")
+models_dir = os.path.join(path, "models")
+train_data_dir = os.path.join(path, "train_data")
+image_dir = os.path.join(train_data_dir, "4000")
+if not os.path.exists(image_dir):
+    os.makedirs(image_dir)
+SDXL_model = os.path.join(models_dir, "animagine-xl-3.1.safetensors")
+base_image_path = os.path.join(models_dir, "base_c_1024.png")
+base_c_lora = os.path.join(models_dir, "copi-ki-base-c.safetensors")
+base_b_lora = os.path.join(models_dir, "copi-ki-base-b.safetensors")
+base_cnl_lora = os.path.join(models_dir, "copi-ki-base-cnl.safetensors")
+base_bnl_lora = os.path.join(models_dir, "copi-ki-base-bnl.safetensors")
+caption_dir = os.path.join(path, "caption")
 
 def find_free_port(start_port=7860):
     """指定したポートから開始して空いているポートを見つけて返す関数"""
@@ -76,7 +70,7 @@ def find_free_port(start_port=7860):
             continue
     raise RuntimeError("No free ports available.")  # 空いているポートが見つからなかった場合
 
-def setup_paths(mode_inputs, train_data_dir):
+def setup_base_lora(mode_inputs):
     if mode_inputs in ["Lineart", "Grayscale_noline"]:
         base_lora = base_c_lora
     elif mode_inputs == "Grayscale":
@@ -86,11 +80,22 @@ def setup_paths(mode_inputs, train_data_dir):
     elif mode_inputs == "Color_noline":
         base_lora = base_b_lora
 
-    dir_type = mode_inputs.lower().replace('_', '')
-    image_dir = os.path.join(train_data_dir, f"{dir_type}/4000")
-    train_dir = os.path.join(train_data_dir, dir_type)
+    return base_lora
 
-    return base_lora, image_dir, train_dir
+
+def setup_caption(mode_inputs):
+    if mode_inputs in ["Lineart", "Grayscale_noline"]:
+        caption_txt = os.path.join(caption_dir, "color_g.txt")
+    else :
+        caption_txt = os.path.join(caption_dir, "grayscale_g.txt")
+
+    #caption_txtをtmp_dirに名前をそれぞれ1024.txt, 768.txt, 512.txtに変更してコピー
+    for size in [1024, 768, 512]:
+        caption_size_txt = os.path.join(image_dir, f"{size}.txt")
+        with open(caption_txt, "r") as f:
+            with open(caption_size_txt, "w") as f2:
+                f2.write(f.read())
+
 
 def check_cuda():
     if torch.cuda.is_available():
@@ -105,7 +110,7 @@ def check_cuda():
 
 def train(input_image_path, lora_name, mode_inputs):
     input_image = Image.open(input_image_path)
-    base_lora, image_dir, train_dir = setup_paths(mode_inputs, train_data_dir)
+    base_lora = setup_base_lora(mode_inputs)
 
     for size in [1024, 768, 512]:
         resize_image = input_image.resize((size, size))
@@ -115,40 +120,45 @@ def train(input_image_path, lora_name, mode_inputs):
     sdxl_train_network = importlib.util.module_from_spec(spec_sdxl_train_network)
     spec_sdxl_train_network.loader.exec_module(sdxl_train_network)
 
+    # config.tomlファイルの読み込み
+    with open(config_file, 'r') as f:
+        config = toml.load(f)
+
+    # 読み込んだ設定をargs_dictに代入
     args_dict = {
-        "pretrained_model_name_or_path": SDXL_model,
-        "train_data_dir": train_dir,
-        "output_dir": data_dir,
-        "output_name": "copi-ki-kari",
-        "max_train_steps": 1000,
-        "network_module": "networks.lora",
-        "xformers": True,
-        "gradient_checkpointing": True,
-        "persistent_data_loader_workers": True,
-        # "max_data_loader_n_workers": 12,
-        "enable_bucket": True,
-        "save_model_as": "safetensors",
-        "lr_scheduler_num_cycles": 4,
-        "learning_rate": 1e-4,
-        "resolution": "1024,1024",
-        "train_batch_size": 2,
-        "network_dim": 16,
-        "network_alpha": 16,
-        "optimizer_type": "AdamW8bit",
-        "mixed_precision": "fp16",
-        "save_precision": "fp16",
-        "lr_scheduler": "constant",
-        "bucket_no_upscale": True,
-        "min_bucket_reso": 64,
-        "max_bucket_reso": 1024,
-        "caption_extension": ".txt",
-        "seed": 42,
-        "network_train_unet_only": True,
-        "no_half_vae": True,
-        "cache_latents": True,
-        "cache_latents_to_disk": True,
-        "cache_text_encoder_outputs": True,
-        "cache_text_encoder_outputs_to_disk": True,
+        "pretrained_model_name_or_path": config["pretrained_model_name_or_path"],
+        "train_data_dir": config["train_data_dir"],
+        "output_dir": config["output_dir"],
+        "output_name": config["output_name"],
+        "max_train_steps": config["max_train_steps"],
+        "network_module": config["network_module"],
+        "xformers": config["xformers"],
+        "gradient_checkpointing": config["gradient_checkpointing"],
+        "persistent_data_loader_workers": config["persistent_data_loader_workers"],
+        "max_data_loader_n_workers": config["max_data_loader_n_workers"],
+        "enable_bucket": config["enable_bucket"],
+        "save_model_as": config["save_model_as"],
+        "lr_scheduler_num_cycles": config["lr_scheduler_num_cycles"],
+        "learning_rate": config["learning_rate"],
+        "resolution": config["resolution"],
+        "train_batch_size": config["train_batch_size"],
+        "network_dim": config["network_dim"],
+        "network_alpha": config["network_alpha"],
+        "optimizer_type": config["optimizer_type"],
+        "mixed_precision": config["mixed_precision"],
+        "save_precision": config["save_precision"],
+        "lr_scheduler": config["lr_scheduler"],
+        "bucket_no_upscale": config["bucket_no_upscale"],
+        "min_bucket_reso": config["min_bucket_reso"],
+        "max_bucket_reso": config["max_bucket_reso"],
+        "caption_extension": config["caption_extension"],
+        "seed": config["seed"],
+        "network_train_unet_only": config["network_train_unet_only"],
+        "no_half_vae": config["no_half_vae"],
+        "cache_latents": config["cache_latents"],
+        "cache_latents_to_disk": config["cache_latents_to_disk"],
+        "cache_text_encoder_outputs": config["cache_text_encoder_outputs"],
+        "cache_text_encoder_outputs_to_disk": config["cache_text_encoder_outputs_to_disk"],
     }
 
     Low_VRAM = check_cuda()
@@ -165,9 +175,9 @@ def train(input_image_path, lora_name, mode_inputs):
     trainer = sdxl_train_network.SdxlNetworkTrainer()
     trainer.train(args)
 
-    kari_lora = os.path.join(data_dir, "copi-ki-kari.safetensors")
+    kari_lora = os.path.join(models_dir, "copi-ki-kari.safetensors")
     output_dir = os.path.join(path, "output")
-    merge_lora = os.path.join(data_dir, "merge_lora.safetensors")
+    merge_lora = os.path.join(models_dir, "merge_lora.safetensors")
     train_lora = os.path.join(output_dir, f"{lora_name}.safetensors")
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)

@@ -22,11 +22,12 @@ cd sd-scripts
 git checkout "25f961bc779bc79aef440813e3e8e92244ac5739"
 
 # 必要なパッケージをインストール
-pip install torch==2.1.2 torchvision==0.16.2 --index-url https://download.pytorch.org/whl/cu121
+pip install torch==2.1.2 torchvision==0.16.2 --index-url https://download.pytorch.org/whl/cu118
 pip install --upgrade -r requirements.txt
-pip install xformers==0.0.23.post1 --index-url https://download.pytorch.org/whl/cu121
+pip install xformers==0.0.23.post1 --index-url https://download.pytorch.org/whl/cu118
 pip install -U bitsandbytes
-pip install gradio==3.41.2
+pip install wandb==0.17.3
+pip install gradio==4.37.1
 pip install pyinstaller
 
 # 定義されたファイルパス
