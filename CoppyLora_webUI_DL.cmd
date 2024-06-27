@@ -1,7 +1,7 @@
 @echo off
 setlocal
 
-set "base_dir=%~dp0data"
+set "base_dir=%~dp0models"
 
 if not exist "%base_dir%" mkdir "%base_dir%"
 
