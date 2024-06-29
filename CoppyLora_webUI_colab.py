@@ -194,6 +194,8 @@ def train(input_image_path, lora_name, mode_inputs):
         "--cache_text_encoder_outputs",
         "--cache_text_encoder_outputs_to_disk",
         "--fp8_base"
+        "--console_log_simple",
+        "--lowram"
     ]
     subprocess.run(command1, check=True, cwd=sd_scripts_dir)   
 
