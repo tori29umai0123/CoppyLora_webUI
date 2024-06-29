@@ -37,10 +37,6 @@ spec_resize = importlib.util.spec_from_file_location("resize", os.path.join(netw
 resize = importlib.util.module_from_spec(spec_resize)
 spec_resize.loader.exec_module(resize)
 
-spec_cache_latents = importlib.util.spec_from_file_location("cache_latents", os.path.join(tools_path, 'cache_latents.py'))
-cache_latents = importlib.util.module_from_spec(spec_cache_latents)
-spec_cache_latents.loader.exec_module(cache_latents)
-
 
 config_file = os.path.join(path, "config.toml")
 models_dir = os.path.join(path, "models")
@@ -119,46 +115,45 @@ def train(input_image_path, lora_name, mode_inputs):
         resize_image.save(os.path.join(image_1_dir, f"{size}.png"))
 
     #学習前にcache_latentsを作る
-    args_dict = {
-        "pretrained_model_name_or_path": SDXL_model,
-        "train_data_dir": train_data_dir,
-        "output_dir": models_dir,
-        "output_name": "copi-ki-kari",
-        "max_train_steps": 1000,
-        "xformers": True,
-        "gradient_checkpointing": True,
-        "persistent_data_loader_workers": True,
-        "max_data_loader_n_workers": 12,
-        "enable_bucket": True,
-        "resolution": "1024,1024",
-        "train_batch_size": 2,
-        "mixed_precision": "fp16",
-        "save_precision": "fp16",
-        "bucket_no_upscale": True,
-        "min_bucket_reso": 64,
-        "max_bucket_reso": 1024,
-        "caption_extension": ".txt",
-        "seed": 42,
-        "no_half_vae": True,
-        "cache_latents": True,
-        "cache_latents_to_disk": True,
-        "sdxl": True,
-        "skip_existing": True,
-        "console_log_simple": True,
-        "lowram": True
-    }
+    cache_latents = os.path.join(sd_scripts_dir, 'tools/cache_latents.py')
+    command = [
+        "accelerate", "launch", "--config_file", accelerate_config, cache_latents,
+        "--pretrained_model_name_or_path", SDXL_model,
+        "--train_data_dir", train_data_dir,
+        "--output_dir", models_dir,
+        "--output_name", "copi-ki-kari",
+        "--max_train_steps", "1000",
+        "--xformers",
+        "--gradient_checkpointing",
+        "--persistent_data_loader_workers",
+        "--enable_bucket",
+        "--resolution", "1024,1024",
+        "--train_batch_size", "2",
+        "--mixed_precision", "fp16",
+        "--save_precision", "fp16",
+        "--bucket_no_upscale",
+        "--min_bucket_reso", "64",
+        "--max_bucket_reso", "1024",
+        "--caption_extension", ".txt",
+        "--seed", "42",
+        "--no_half_vae",
+        "--cache_latents",
+        "--cache_latents_to_disk",
+        "--sdxl",
+        "--skip_existing",
+        "--console_log_simple",
+        "--lowram"
+    ]
+    try:
+        subprocess.run(command, check=True)
+    except subprocess.CalledProcessError as e:
+        print(f"Error during training step: {e}")
+        return 
 
-    parser = cache_latents.setup_parser()
-    args = parser.parse_args()
-    args = cache_latents.train_util.read_config_from_file(args, parser)
-    args2 = argparse.Namespace(**args_dict)
-    for key, value in vars(args2).items():
-        setattr(args, key, value)
-    cache_latents.cache_to_disk(args)
-    #つぎの学習の為にフォルダ名を元に戻す
+    #つぎの学習の為にフォルダ名を4000に
     os.rename(image_1_dir, image_4000_dir)
     sdxl_train_network = os.path.join(sd_scripts_dir, 'sdxl_train_network.py')
-    command1 = [
+    command = [
         "accelerate", "launch", "--config_file", accelerate_config, sdxl_train_network,
         "--pretrained_model_name_or_path", SDXL_model,
         "--train_data_dir", train_data_dir,
@@ -169,7 +164,6 @@ def train(input_image_path, lora_name, mode_inputs):
         "--xformers",
         "--gradient_checkpointing",
         "--persistent_data_loader_workers",
-        "--max_data_loader_n_workers", "12",
         "--enable_bucket",
         "--save_model_as", "safetensors",
         "--lr_scheduler_num_cycles", "4",
@@ -193,11 +187,14 @@ def train(input_image_path, lora_name, mode_inputs):
         "--cache_latents_to_disk",
         "--cache_text_encoder_outputs",
         "--cache_text_encoder_outputs_to_disk",
-        "--fp8_base",
         "--console_log_simple",
         "--lowram"
     ]
-    subprocess.run(command1, check=True, cwd=sd_scripts_dir)   
+    try:
+        subprocess.run(command, check=True)
+    except subprocess.CalledProcessError as e:
+        print(f"Error during training step: {e}")
+        return  # 学習中のエラーが発生した場合もここで処理を終了
 
     kari_lora = os.path.join(models_dir, "copi-ki-kari.safetensors")
     output_dir = os.path.join(path, "output")
