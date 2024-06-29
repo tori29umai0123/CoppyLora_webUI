@@ -1,8 +1,9 @@
 import os
+import shutil
+# ログでエラーが出るので、念のため環境変数を設定
 os.environ['TERM'] = 'dumb'
 import gradio as gr
 import torch
-import subprocess
 import sys
 from PIL import Image
 import importlib.util
@@ -11,21 +12,16 @@ import socket
 import webbrowser
 import threading
 import socket
+import toml
+import subprocess
 
-def get_appropriate_file_path():
-    if getattr(sys, 'frozen', False):
-        path = os.path.dirname(sys.executable)
-        return path
-    else:
-        path = os.path.dirname(os.path.abspath(__file__))
-        return path
-    
-path = get_appropriate_file_path()
 
+path = os.path.dirname(os.path.abspath(__file__))
 sd_scripts_dir = os.path.join(path, 'sd-scripts')
 networks_path = os.path.join(sd_scripts_dir, 'networks')
 library_path = os.path.join(sd_scripts_dir, 'library')
 tools_path = os.path.join(sd_scripts_dir, 'tools')
+
 # パスをシステムパスに追加
 sys.path.append(sd_scripts_dir)
 sys.path.append(networks_path)
@@ -46,16 +42,20 @@ cache_latents = importlib.util.module_from_spec(spec_cache_latents)
 spec_cache_latents.loader.exec_module(cache_latents)
 
 
-data_dir = os.path.join(path, "data")
-train_data_dir = os.path.join(path, "train")
-SDXL_model = os.path.join(data_dir, "animagine-xl-3.1.safetensors")
-base_image_path = os.path.join(data_dir, "base_c_1024.png")
-base_c_lora = os.path.join(data_dir, "copi-ki-base-c.safetensors")
-base_b_lora = os.path.join(data_dir, "copi-ki-base-b.safetensors")
-base_cnl_lora = os.path.join(data_dir, "copi-ki-base-cnl.safetensors")
-base_bnl_lora = os.path.join(data_dir, "copi-ki-base-bnl.safetensors")
+config_file = os.path.join(path, "config.toml")
+models_dir = os.path.join(path, "models")
+train_data_dir = os.path.join(path, "train_data")
+image_4000_dir = os.path.join(train_data_dir, "4000")
+image_1_dir = os.path.join(train_data_dir, "1")
+base_image_path = os.path.join(models_dir, "base_c_1024.png")
+base_c_lora = os.path.join(models_dir, "copi-ki-base-c.safetensors")
+base_b_lora = os.path.join(models_dir, "copi-ki-base-b.safetensors")
+base_cnl_lora = os.path.join(models_dir, "copi-ki-base-cnl.safetensors")
+base_bnl_lora = os.path.join(models_dir, "copi-ki-base-bnl.safetensors")
+caption_dir = os.path.join(path, "caption")
+SDXL_model = os.path.join(models_dir, "animagine-xl-3.1.safetensors")
 
-accelerate_config = "/content/CoppyLora_Train/accelerate_config.yaml"
+accelerate_config = os.path.join(path, "accelerate_config.yaml")
 import os
 from accelerate.utils import write_basic_config
 
@@ -76,7 +76,7 @@ def find_free_port(start_port=7860):
             continue
     raise RuntimeError("No free ports available.")  # 空いているポートが見つからなかった場合
 
-def setup_paths(mode_inputs, train_data_dir):
+def setup_base_lora(mode_inputs):
     if mode_inputs in ["Lineart", "Grayscale_noline"]:
         base_lora = base_c_lora
     elif mode_inputs == "Grayscale":
@@ -85,42 +85,44 @@ def setup_paths(mode_inputs, train_data_dir):
         base_lora = base_bnl_lora
     elif mode_inputs == "Color_noline":
         base_lora = base_b_lora
+    return base_lora
 
-    dir_type = mode_inputs.lower().replace('_', '')
-    old_image_dir = os.path.join(train_data_dir, f"{dir_type}/1")
-    new_image_dir = os.path.join(train_data_dir, f"{dir_type}/4000")
-    train_dir = os.path.join(train_data_dir, dir_type)
 
-    return base_lora, old_image_dir, new_image_dir, train_dir
+def setup_caption(mode_inputs):
+    if mode_inputs in ["Lineart", "Grayscale_noline"]:
+        caption_txt = os.path.join(caption_dir, "color_g.txt")
+    else :
+        caption_txt = os.path.join(caption_dir, "grayscale_g.txt")
 
-def check_cuda():
-    if torch.cuda.is_available():
-        total_memory = torch.cuda.get_device_properties(0).total_memory / (1024 ** 3)
-        if total_memory <= 15:
-            print("Low VRAM detected, using fp8_base")
-            Low_VRAM = True           
-        else:
-            print("High VRAM detected, using fp16_base")
-            Low_VRAM = False
-    return Low_VRAM
+    #caption_txtをtmp_dirに名前をそれぞれ1024.txt, 768.txt, 512.txtに変更してコピー
+    for size in [1024, 768, 512]:
+        caption_size_txt = os.path.join(image_1_dir, f"{size}.txt")
+        with open(caption_txt, "r") as f:
+            with open(caption_size_txt, "w") as f2:
+                f2.write(f.read())
 
 def train(input_image_path, lora_name, mode_inputs):
-    input_image = Image.open(input_image_path)
-    base_lora, old_image_dir, new_image_dir, train_dir = setup_paths(mode_inputs, train_data_dir)
+    if os.path.exists(image_1_dir):
+        shutil.rmtree(image_1_dir)
+    os.makedirs(image_1_dir)
 
-    #もしold_image_dirがなかったら、new_image_dirをold_image_dirにリネームする
-    if not os.path.exists(old_image_dir):
-        os.rename(new_image_dir, old_image_dir)
+    if os.path.exists(image_4000_dir):
+        shutil.rmtree(image_4000_dir)
+
+    output_dir = os.path.join(path, "output")
+    
+    input_image = Image.open(input_image_path)
+    base_lora = setup_base_lora(mode_inputs)
 
     for size in [1024, 768, 512]:
         resize_image = input_image.resize((size, size))
-        resize_image.save(os.path.join(old_image_dir, f"{size}.png"))
+        resize_image.save(os.path.join(image_1_dir, f"{size}.png"))
 
     #学習前にcache_latentsを作る
     args_dict = {
         "pretrained_model_name_or_path": SDXL_model,
-        "train_data_dir": train_dir,
-        "output_dir": data_dir,
+        "train_data_dir": train_data_dir,
+        "output_dir": models_dir,
         "output_name": "copi-ki-kari",
         "max_train_steps": 1000,
         "xformers": True,
@@ -154,13 +156,13 @@ def train(input_image_path, lora_name, mode_inputs):
         setattr(args, key, value)
     cache_latents.cache_to_disk(args)
     #つぎの学習の為にフォルダ名を元に戻す
-    os.rename(old_image_dir, new_image_dir)
+    os.rename(image_1_dir, image_4000_dir)
     sdxl_train_network = os.path.join(sd_scripts_dir, 'sdxl_train_network.py')
     command1 = [
         "accelerate", "launch", "--config_file", accelerate_config, sdxl_train_network,
         "--pretrained_model_name_or_path", SDXL_model,
-        "--train_data_dir", train_dir,
-        "--output_dir", data_dir,
+        "--train_data_dir", train_data_dir,
+        "--output_dir", models_dir,
         "--output_name", "copi-ki-kari",
         "--max_train_steps", "1000",
         "--network_module", "networks.lora",
@@ -195,11 +197,9 @@ def train(input_image_path, lora_name, mode_inputs):
     ]
     subprocess.run(command1, check=True, cwd=sd_scripts_dir)   
 
-    os.rename(new_image_dir, old_image_dir)
-
-    kari_lora = os.path.join(data_dir, "copi-ki-kari.safetensors")
+    kari_lora = os.path.join(models_dir, "copi-ki-kari.safetensors")
     output_dir = os.path.join(path, "output")
-    merge_lora = os.path.join(data_dir, "merge_lora.safetensors")
+    merge_lora = os.path.join(models_dir, "merge_lora.safetensors")
     train_lora = os.path.join(output_dir, f"{lora_name}.safetensors")
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -257,9 +257,7 @@ def main():
 
     # ブラウザでURLを開く
     threading.Thread(target=lambda: webbrowser.open_new(url)).start()
-    is_colab = 'COLAB_GPU' in os.environ
-    share_setting = True if is_colab else False
-    demo.launch(share=share_setting, server_name="0.0.0.0", server_port=port)
+    demo.launch(share=True, server_name="0.0.0.0", server_port=port)
 
 if __name__ == "__main__":
     main()
