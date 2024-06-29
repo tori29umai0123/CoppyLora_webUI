@@ -1,5 +1,6 @@
 import os
-# ログでエラーが出るので、環境変数を設定
+import shutil
+# ログでエラーが出るので、念のため環境変数を設定
 os.environ['TERM'] = 'dumb'
 import gradio as gr
 import torch
@@ -46,9 +47,6 @@ config_file = os.path.join(path, "config.toml")
 models_dir = os.path.join(path, "models")
 train_data_dir = os.path.join(path, "train_data")
 image_dir = os.path.join(train_data_dir, "4000")
-if not os.path.exists(image_dir):
-    os.makedirs(image_dir)
-SDXL_model = os.path.join(models_dir, "animagine-xl-3.1.safetensors")
 base_image_path = os.path.join(models_dir, "base_c_1024.png")
 base_c_lora = os.path.join(models_dir, "copi-ki-base-c.safetensors")
 base_b_lora = os.path.join(models_dir, "copi-ki-base-b.safetensors")
@@ -109,6 +107,15 @@ def check_cuda():
     return Low_VRAM
 
 def train(input_image_path, lora_name, mode_inputs):
+    if os.path.exists(image_dir):
+        shutil.rmtree(image_dir)
+    os.makedirs(image_dir)
+    output_dir = os.path.join(path, "output")
+
+    if os.path.exists(output_dir):
+        shutil.rmtree(output_dir)
+    os.makedirs(output_dir)
+    
     input_image = Image.open(input_image_path)
     base_lora = setup_base_lora(mode_inputs)
 
@@ -176,7 +183,6 @@ def train(input_image_path, lora_name, mode_inputs):
     trainer.train(args)
 
     kari_lora = os.path.join(models_dir, "copi-ki-kari.safetensors")
-    output_dir = os.path.join(path, "output")
     merge_lora = os.path.join(models_dir, "merge_lora.safetensors")
     train_lora = os.path.join(output_dir, f"{lora_name}.safetensors")
     if not os.path.exists(output_dir):
