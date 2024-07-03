@@ -82,7 +82,7 @@ def setup_base_lora(mode_inputs):
 
 
 def setup_caption(mode_inputs):
-    if mode_inputs in ["Lineart", "Grayscale_noline"]:
+    if mode_inputs not in ["Lineart", "Grayscale_noline"]:
         caption_txt = os.path.join(caption_dir, "color_g.txt")
     else :
         caption_txt = os.path.join(caption_dir, "grayscale_g.txt")
