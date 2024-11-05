@@ -267,6 +267,10 @@ def simple_setup_caption(mode_inputs, mode_type):
                 f2.write(f.read())
 
 def detail_setup_caption(caption_text):
+    # 事前にディレクトリの存在を確認して作成
+    if not os.path.exists(image_1_dir):
+        os.makedirs(image_1_dir)
+
     # 各サイズごとにキャプションファイルをコピー
     for size in [1024, 768, 512]:
         caption_size_txt = os.path.join(image_1_dir, f"{size}.txt")
