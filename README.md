@@ -31,6 +31,9 @@ xcopy /E /I /Y venv\Lib\site-packages\imagesize dist\CoppyLora_webUI\_internal\i
 xcopy /E /I /Y venv\Lib\site-packages\cv2 dist\CoppyLora_webUI\_internal\cv2
 xcopy /E /I /Y venv\Lib\site-packages\voluptuous dist\CoppyLora_webUI\_internal\voluptuous
 xcopy /E /I /Y caption dist\CoppyLora_webUI\caption
+xcopy /E /I /Y png dist\CoppyLora_webUI\png
+xcopy /E /I /Y utils dist\CoppyLora_webUI\_internal\utils
+
 copy CoppyLora_webUI_ReadMe.txt dist\CoppyLora_webUI\CoppyLora_webUI_ReadMe.txt
 copy CoppyLora_webUI_DL.cmd dist\CoppyLora_webUI\CoppyLora_webUI_DL.cmd
 copy config.toml dist\CoppyLora_webUI\config.toml
