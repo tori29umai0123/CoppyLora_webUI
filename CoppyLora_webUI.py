@@ -53,7 +53,7 @@ spec_resize.loader.exec_module(resize)
 models_dir = os.path.join(path, "models")
 sdxl_dir = os.path.join(models_dir, "SDXL")
 tagger_dir = os.path.join(models_dir, "tagger")
-lora_dir  = os.path.join(models_dir, "LoRA")
+lora_dir = os.path.join(models_dir, "LoRA")
 train_data_dir = os.path.join(path, "train_data")
 image_dir = os.path.join(train_data_dir, "4000")
 caption_dir = os.path.join(path, "caption")
@@ -127,10 +127,6 @@ def setup_base_lora(mode_inputs, mode_type):
             base_lora = os.path.join(lora_dir , f"copi-ki-base-girl_cl_am31.safetensors")
         elif mode_inputs == "Color_noline":
             base_lora = os.path.join(lora_dir , f"copi-ki-base-girl_cnl_am31.safetensors")
-    elif mode_type == "female_photo":
-        base_lora = os.path.join(lora_dir , f"copi-ki-base-female_p_am31.safetensors")
-    elif mode_type == "male_photo":
-        base_lora = os.path.join(lora_dir , f"copi-ki-base-male_p_am31.safetensors")
     return base_lora
 
 def simple_setup_caption(mode_inputs, mode_type):
@@ -159,11 +155,6 @@ def simple_setup_caption(mode_inputs, mode_type):
         elif mode_inputs == "Color_noline":
             caption_txt = os.path.join(caption_dir, "g_cl.txt")
 
-    elif mode_type == "female_photo":
-        caption_txt = os.path.join(caption_dir, "f_photo.txt")
-
-    elif mode_type == "male_photo":
-        caption_txt = os.path.join(caption_dir, "m_photo.txt")
 
     # 各サイズごとにキャプションファイルをコピー
     for size in [1024, 768, 512]:
