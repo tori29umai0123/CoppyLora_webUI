@@ -24,6 +24,7 @@ pip install -U bitsandbytes
 pip install wandb==0.17.3
 pip install gradio==4.37.1
 pip install pyinstaller
+pip install onnx==1.15.0 onnxruntime==1.17.1 onnxruntime-gpu==1.17.1
 
 $filePath1 = "library\lpw_stable_diffusion.py"
 $filePath2 = "library\sdxl_lpw_stable_diffusion.py"

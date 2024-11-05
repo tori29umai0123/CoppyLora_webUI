@@ -1,7 +1,6 @@
 pretrained_model_name_or_path = "models/animagine-xl-3.1.safetensors"
 train_data_dir = "train_data"
-output_dir = "models"
-output_name = "copi-ki-kari"
+output_dir = "models/LoRA"
 max_train_steps = 1000
 network_module = "networks.lora"
 xformers = true
@@ -31,3 +30,6 @@ cache_latents = true
 cache_latents_to_disk = true
 cache_text_encoder_outputs = true
 cache_text_encoder_outputs_to_disk = true
+fp8_base = true
+console_log_simple = true
+lowram = true
