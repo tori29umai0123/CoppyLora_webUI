@@ -170,13 +170,6 @@ def detail_setup_caption(caption_txt):
             with open(caption_size_txt, "w") as f2:
                 f2.write(f.read())
 
-def update_mode_inputs_based_on_type(mode_type):
-    """モードタイプに基づいてmode_inputsの値を更新する関数"""
-    if mode_type in ["male_photo", "female_photo"]:
-        return "None"
-    else:
-        return "Lineart"
-
 def update_base_image(mode_type):
     """選択されたモードとタイプに基づいて表示するベース画像を更新する関数"""
     if mode_type == "boy_mode":
