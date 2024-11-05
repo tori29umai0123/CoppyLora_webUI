@@ -45,7 +45,7 @@ spec_resize.loader.exec_module(resize)
 models_dir = os.path.join(path, "models")
 sdxl_dir = os.path.join(models_dir, "SDXL")
 tagger_dir = os.path.join(models_dir, "tagger")
-LoRA_dir = os.path.join(models_dir, "LoRA")
+lora_dir = os.path.join(models_dir, "LoRA")
 train_data_dir = os.path.join(path, "train_data")
 caption_dir = os.path.join(path, "caption")
 png_dir = os.path.join(path, "png")
@@ -106,26 +106,26 @@ def setup_base_lora(mode_inputs, mode_type):
     # モードとタイプに応じたベースLoRAの設定
     if mode_type == "boy_mode":
         if mode_inputs == "Lineart":
-            base_lora = os.path.join(LoRA_dir, f"copi-ki-base-boy_ncl_am31.safetensors")
+            base_lora = os.path.join(lora_dir, f"copi-ki-base-boy_ncl_am31.safetensors")
         elif mode_inputs == "Grayscale":
-            base_lora = os.path.join(LoRA_dir, f"copi-ki-base-boy_ncnl_am31.safetensors")
+            base_lora = os.path.join(lora_dir, f"copi-ki-base-boy_ncnl_am31.safetensors")
         elif mode_inputs == "Grayscale_noline":
-            base_lora = os.path.join(LoRA_dir, f"copi-ki-base-boy_ncnl_am31.safetensors")
+            base_lora = os.path.join(lora_dir, f"copi-ki-base-boy_ncnl_am31.safetensors")
         elif mode_inputs == "Color":
-            base_lora = os.path.join(LoRA_dir, f"copi-ki-base-boy_cl_am31.safetensors")
+            base_lora = os.path.join(lora_dir, f"copi-ki-base-boy_cl_am31.safetensors")
         elif mode_inputs == "Color_noline":
-            base_lora = os.path.join(LoRA_dir, f"copi-ki-base-boy_cnl_am31.safetensors")
+            base_lora = os.path.join(lora_dir, f"copi-ki-base-boy_cnl_am31.safetensors")
     elif mode_type == "girl_mode":
         if mode_inputs == "Lineart":
-            base_lora = os.path.join(LoRA_dir, f"copi-ki-base-girl_ncl_am31.safetensors")
+            base_lora = os.path.join(lora_dir, f"copi-ki-base-girl_ncl_am31.safetensors")
         elif mode_inputs == "Grayscale":
-            base_lora = os.path.join(LoRA_dir, f"copi-ki-base-girl_ncnl_am31.safetensors")
+            base_lora = os.path.join(lora_dir, f"copi-ki-base-girl_ncnl_am31.safetensors")
         elif mode_inputs == "Grayscale_noline":
-            base_lora = os.path.join(LoRA_dir, f"copi-ki-base-girl_ncnl_am31.safetensors")
+            base_lora = os.path.join(lora_dir, f"copi-ki-base-girl_ncnl_am31.safetensors")
         elif mode_inputs == "Color":
-            base_lora = os.path.join(LoRA_dir, f"copi-ki-base-girl_cl_am31.safetensors")
+            base_lora = os.path.join(lora_dir, f"copi-ki-base-girl_cl_am31.safetensors")
         elif mode_inputs == "Color_noline":
-            base_lora = os.path.join(LoRA_dir, f"copi-ki-base-girl_cnl_am31.safetensors")
+            base_lora = os.path.join(lora_dir, f"copi-ki-base-girl_cnl_am31.safetensors")
     return base_lora
 
 def simple_setup_caption(mode_inputs, mode_type):
@@ -156,7 +156,7 @@ def simple_setup_caption(mode_inputs, mode_type):
 
     # 各サイズごとにキャプションファイルをコピー
     for size in [1024, 768, 512]:
-        caption_size_txt = os.path.join(image_dir, f"{size}.txt")
+        caption_size_txt = os.path.join(image_1_dir, f"{size}.txt")
         with open(caption_txt, "r") as f:
             with open(caption_size_txt, "w") as f2:
                 f2.write(f.read())
@@ -164,7 +164,7 @@ def simple_setup_caption(mode_inputs, mode_type):
 def detail_setup_caption(caption_txt):
     # 各サイズごとにキャプションファイルをコピー
     for size in [1024, 768, 512]:
-        caption_size_txt = os.path.join(image_dir, f"{size}.txt")
+        caption_size_txt = os.path.join(image_1_dir, f"{size}.txt")
         with open(caption_txt, "r") as f:
             with open(caption_size_txt, "w") as f2:
                 f2.write(f.read())
@@ -206,26 +206,26 @@ def setup_base_lora(mode_inputs, mode_type):
     # モードとタイプに応じたベースLoRAの設定
     if mode_type == "boy_mode":
         if mode_inputs == "Lineart":
-            base_lora = os.path.join(LoRA_dir, f"copi-ki-base-boy_ncl_am31.safetensors")
+            base_lora = os.path.join(lora_dir, f"copi-ki-base-boy_ncl_am31.safetensors")
         elif mode_inputs == "Grayscale":
-            base_lora = os.path.join(LoRA_dir, f"copi-ki-base-boy_ncnl_am31.safetensors")
+            base_lora = os.path.join(lora_dir, f"copi-ki-base-boy_ncnl_am31.safetensors")
         elif mode_inputs == "Grayscale_noline":
-            base_lora = os.path.join(LoRA_dir, f"copi-ki-base-boy_ncnl_am31.safetensors")
+            base_lora = os.path.join(lora_dir, f"copi-ki-base-boy_ncnl_am31.safetensors")
         elif mode_inputs == "Color":
-            base_lora = os.path.join(LoRA_dir, f"copi-ki-base-boy_cl_am31.safetensors")
+            base_lora = os.path.join(lora_dir, f"copi-ki-base-boy_cl_am31.safetensors")
         elif mode_inputs == "Color_noline":
-            base_lora = os.path.join(LoRA_dir, f"copi-ki-base-boy_cnl_am31.safetensors")
+            base_lora = os.path.join(lora_dir, f"copi-ki-base-boy_cnl_am31.safetensors")
     elif mode_type == "girl_mode":
         if mode_inputs == "Lineart":
-            base_lora = os.path.join(LoRA_dir, f"copi-ki-base-girl_ncl_am31.safetensors")
+            base_lora = os.path.join(lora_dir, f"copi-ki-base-girl_ncl_am31.safetensors")
         elif mode_inputs == "Grayscale":
-            base_lora = os.path.join(LoRA_dir, f"copi-ki-base-girl_ncnl_am31.safetensors")
+            base_lora = os.path.join(lora_dir, f"copi-ki-base-girl_ncnl_am31.safetensors")
         elif mode_inputs == "Grayscale_noline":
-            base_lora = os.path.join(LoRA_dir, f"copi-ki-base-girl_ncnl_am31.safetensors")
+            base_lora = os.path.join(lora_dir, f"copi-ki-base-girl_ncnl_am31.safetensors")
         elif mode_inputs == "Color":
-            base_lora = os.path.join(LoRA_dir, f"copi-ki-base-girl_cl_am31.safetensors")
+            base_lora = os.path.join(lora_dir, f"copi-ki-base-girl_cl_am31.safetensors")
         elif mode_inputs == "Color_noline":
-            base_lora = os.path.join(LoRA_dir, f"copi-ki-base-girl_cnl_am31.safetensors")
+            base_lora = os.path.join(lora_dir, f"copi-ki-base-girl_cnl_am31.safetensors")
     return base_lora
 
 
@@ -292,10 +292,7 @@ def simple_train(base_model, input_image_path, lora_name, mode_inputs, mode_type
 
     if os.path.exists(image_4000_dir):
         shutil.rmtree(image_4000_dir)
-
-    if not os.path.exists(LoRA_dir):
-        os.makedirs(LoRA_dir)
-
+        
     output_dir = os.path.join(path, "output")
     
     input_image = Image.open(input_image_path)
@@ -313,7 +310,7 @@ def simple_train(base_model, input_image_path, lora_name, mode_inputs, mode_type
         "accelerate", "launch", "--config_file", accelerate_config, cache_latents,
         "--pretrained_model_name_or_path", base_model_path,
         "--train_data_dir", train_data_dir,
-        "--output_dir", models_dir,
+        "--output_dir", lora_dir,
         "--output_name", "copi-ki-kari",
         "--max_train_steps", "1000",
         "--xformers",
@@ -350,7 +347,7 @@ def simple_train(base_model, input_image_path, lora_name, mode_inputs, mode_type
         "accelerate", "launch", "--config_file", accelerate_config, sdxl_train_network,
         "--pretrained_model_name_or_path", base_model_path,
         "--train_data_dir", train_data_dir,
-        "--output_dir", models_dir,
+        "--output_dir", lora_dir,
         "--output_name", "copi-ki-kari",
         "--max_train_steps", "1000",
         "--network_module", "networks.lora",
@@ -390,8 +387,8 @@ def simple_train(base_model, input_image_path, lora_name, mode_inputs, mode_type
         return  # 学習中のエラーが発生した場合もここで処理を終了
 
     output_dir = os.path.join(path, "output")
-    kari_lora = os.path.join(LoRA_dir, "copi-ki-kari.safetensors")
-    merge_lora = os.path.join(LoRA_dir, "merge_lora.safetensors")
+    kari_lora = os.path.join(lora_dir, "copi-ki-kari.safetensors")
+    merge_lora = os.path.join(lora_dir, "merge_lora.safetensors")
     train_lora = os.path.join(output_dir, f"{lora_name}.safetensors")
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -630,10 +627,10 @@ def detail_train(base_model, detail_lora_name, detail_base_img_path, detail_base
         print(f"Error during training step: {e}")
         return  # 学習中のエラーが発生した場合もここで処理を終了
     
-    base_lora  = os.path.join(LoRA_dir, f"{base_lora_name}.safetensors")
-    kari_lora = os.path.join(LoRA_dir, f"{kari_lora_name}.safetensors")
+    base_lora  = os.path.join(lora_dir, f"{base_lora_name}.safetensors")
+    kari_lora = os.path.join(lora_dir, f"{kari_lora_name}.safetensors")
     output_dir = os.path.join(path, "output")
-    merge_lora = os.path.join(LoRA_dir, "merge_lora.safetensors")
+    merge_lora = os.path.join(lora_dir, "merge_lora.safetensors")
     train_lora = os.path.join(output_dir, f"{detail_lora_name}.safetensors")
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -648,7 +645,6 @@ def detail_train(base_model, detail_lora_name, detail_base_img_path, detail_base
         "ratios": [1.41, -1.41],
         "concat": True,
         "shuffle": True,
-        "lbws": [],        
     }
     args = argparse.Namespace(**args_dict)   
     merge.merge(args)
@@ -663,7 +659,6 @@ def detail_train(base_model, detail_lora_name, detail_base_img_path, detail_base
         "verbose": "store_true",
         "dynamic_param": None,
         "dynamic_method": None,
-        "lbws": [],        
     }
     args = argparse.Namespace(**args_dict)  
     resize.resize(args)
