@@ -47,7 +47,6 @@ sdxl_dir = os.path.join(models_dir, "SDXL")
 tagger_dir = os.path.join(models_dir, "tagger")
 LoRA_dir = os.path.join(models_dir, "LoRA")
 train_data_dir = os.path.join(path, "train_data")
-image_dir = os.path.join(train_data_dir, "4000")
 caption_dir = os.path.join(path, "caption")
 png_dir = os.path.join(path, "png")
 config_path = os.path.join(path, "config.toml")
@@ -232,8 +231,8 @@ def setup_base_lora(mode_inputs, mode_type):
 
 def simple_setup_caption(mode_inputs, mode_type):
     # 事前にディレクトリの存在を確認して作成
-    if not os.path.exists(image_dir):
-        os.makedirs(image_dir)
+    if not os.path.exists(image_1_dir):
+        os.makedirs(image_1_dir)
 
     # モードとタイプに応じたキャプションファイルの設定
     if mode_type == "boy_mode":
@@ -262,7 +261,7 @@ def simple_setup_caption(mode_inputs, mode_type):
 
     # 各サイズごとにキャプションファイルをコピー
     for size in [1024, 768, 512]:
-        caption_size_txt = os.path.join(image_dir, f"{size}.txt")
+        caption_size_txt = os.path.join(image_1_dir, f"{size}.txt")
         with open(caption_txt, "r") as f:
             with open(caption_size_txt, "w") as f2:
                 f2.write(f.read())
@@ -270,7 +269,7 @@ def simple_setup_caption(mode_inputs, mode_type):
 def detail_setup_caption(caption_text):
     # 各サイズごとにキャプションファイルをコピー
     for size in [1024, 768, 512]:
-        caption_size_txt = os.path.join(image_dir, f"{size}.txt")
+        caption_size_txt = os.path.join(image_1_dir, f"{size}.txt")
         with open(caption_size_txt, "w") as f2:
             f2.write(caption_text)
 
