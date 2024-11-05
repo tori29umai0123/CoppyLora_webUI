@@ -698,7 +698,6 @@ def main():
                 with gr.Column():
                     detail_output_file = gr.File(label="Download Output File")
 
-        mode_type.change(fn=update_mode_inputs_based_on_type, inputs=mode_type, outputs=mode_inputs)
         mode_type.change(fn=update_base_image, inputs=[mode_type], outputs=base_img)
         mode_inputs.change(fn=update_sample_image, inputs=[mode_inputs, mode_type], outputs=sample_img)
         mode_type.change(fn=update_sample_image, inputs=[mode_inputs, mode_type], outputs=sample_img)
