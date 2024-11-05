@@ -288,6 +288,8 @@ def simple_train(base_model, input_image_path, lora_name, mode_inputs, mode_type
         "ratios": [1.41, -1.41],
         "concat": True,
         "shuffle": True,
+        "lbws": [],        
+        
     }
     args = argparse.Namespace(**args_dict)
     merge.merge(args)
@@ -302,6 +304,7 @@ def simple_train(base_model, input_image_path, lora_name, mode_inputs, mode_type
         "verbose": "store_true",
         "dynamic_param": None,
         "dynamic_method": None,
+        "lbws": [],                
     }
     args = argparse.Namespace(**args_dict)
     resize.resize(args)
@@ -462,6 +465,7 @@ def detail_train(base_model, detail_lora_name, detail_base_img_path, detail_base
         "ratios": [1.41, -1.41],
         "concat": True,
         "shuffle": True,
+         "lbws": [],       
     }
     args = argparse.Namespace(**args_dict)
     merge.merge(args)
@@ -476,6 +480,7 @@ def detail_train(base_model, detail_lora_name, detail_base_img_path, detail_base
         "verbose": "store_true",
         "dynamic_param": None,
         "dynamic_method": None,
+        "lbws": [],        
     }
     args = argparse.Namespace(**args_dict)
     resize.resize(args)
