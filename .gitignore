@@ -1,3 +1,10 @@
+# CoppyLora_webUI
+/venv
+/output
+/models
+/train_data
+/sd-scripts
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
