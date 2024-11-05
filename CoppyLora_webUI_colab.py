@@ -231,6 +231,10 @@ def setup_base_lora(mode_inputs, mode_type):
 
 
 def simple_setup_caption(mode_inputs, mode_type):
+    # 事前にディレクトリの存在を確認して作成
+    if not os.path.exists(image_dir):
+        os.makedirs(image_dir)
+
     # モードとタイプに応じたキャプションファイルの設定
     if mode_type == "boy_mode":
         if mode_inputs == "Lineart":
