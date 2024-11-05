@@ -293,6 +293,9 @@ def simple_train(base_model, input_image_path, lora_name, mode_inputs, mode_type
     if os.path.exists(image_4000_dir):
         shutil.rmtree(image_4000_dir)
 
+    if not os.path.exists(LoRA_dir):
+        os.makedirs(LoRA_dir)
+
     output_dir = os.path.join(path, "output")
     
     input_image = Image.open(input_image_path)
@@ -423,7 +426,6 @@ def simple_train(base_model, input_image_path, lora_name, mode_inputs, mode_type
     args = argparse.Namespace(**args_dict)  
     resize.resize(args)
     return train_lora
-
 
 
 
