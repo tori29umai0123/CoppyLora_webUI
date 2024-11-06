@@ -451,7 +451,7 @@ def detail_train(base_model, detail_lora_name, detail_base_img_path, detail_base
         "accelerate", "launch", "--config_file", accelerate_config, cache_latents,
         "--pretrained_model_name_or_path", base_model_path,
         "--train_data_dir", train_data_dir,
-        "--output_dir", models_dir,
+        "--output_dir", lora_dir,
         "--output_name", base_lora_name,
         "--max_train_steps", "1000",
         "--xformers",
@@ -488,7 +488,7 @@ def detail_train(base_model, detail_lora_name, detail_base_img_path, detail_base
         "accelerate", "launch", "--config_file", accelerate_config, sdxl_train_network,
         "--pretrained_model_name_or_path", base_model_path,
         "--train_data_dir", train_data_dir,
-        "--output_dir", models_dir,
+        "--output_dir", lora_dir,
         "--output_name", base_lora_name,
         "--max_train_steps", "1000",
         "--network_module", "networks.lora",
@@ -551,7 +551,7 @@ def detail_train(base_model, detail_lora_name, detail_base_img_path, detail_base
         "accelerate", "launch", "--config_file", accelerate_config, cache_latents,
         "--pretrained_model_name_or_path", base_model_path,
         "--train_data_dir", train_data_dir,
-        "--output_dir", models_dir,
+        "--output_dir", lora_dir,
         "--output_name", kari_lora_name,
         "--max_train_steps", "1000",
         "--xformers",
@@ -588,7 +588,7 @@ def detail_train(base_model, detail_lora_name, detail_base_img_path, detail_base
         "accelerate", "launch", "--config_file", accelerate_config, sdxl_train_network,
         "--pretrained_model_name_or_path", base_model_path,
         "--train_data_dir", train_data_dir,
-        "--output_dir", models_dir,
+        "--output_dir", lora_dir,
         "--output_name", kari_lora_name,
         "--max_train_steps", "1000",
         "--network_module", "networks.lora",
@@ -645,7 +645,6 @@ def detail_train(base_model, detail_lora_name, detail_base_img_path, detail_base
         "ratios": [1.41, -1.41],
         "concat": True,
         "shuffle": True,
-        "lbws": [],        
     }
     args = argparse.Namespace(**args_dict)   
     merge.merge(args)
@@ -660,7 +659,6 @@ def detail_train(base_model, detail_lora_name, detail_base_img_path, detail_base
         "verbose": "store_true",
         "dynamic_param": None,
         "dynamic_method": None,
-        "lbws": [],   
     }
     args = argparse.Namespace(**args_dict)  
     resize.resize(args)
