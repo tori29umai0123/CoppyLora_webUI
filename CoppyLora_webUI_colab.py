@@ -102,9 +102,9 @@ def find_free_port(start_port=7860):
             continue
     raise RuntimeError("No free ports available.")  # 空いているポートが見つからなかった場合
 
-def setup_base_lora(mode_inputs, mode_type):
+def setup_base_lora(mode_inputs, character_type):
     # モードとタイプに応じたベースLoRAの設定
-    if mode_type == "boy_mode":
+    if character_type == "boy_mode":
         if mode_inputs == "Lineart":
             base_lora = os.path.join(lora_dir, f"copi-ki-base-boy_ncl_am31.safetensors")
         elif mode_inputs == "Grayscale":
@@ -115,7 +115,7 @@ def setup_base_lora(mode_inputs, mode_type):
             base_lora = os.path.join(lora_dir, f"copi-ki-base-boy_cl_am31.safetensors")
         elif mode_inputs == "Color_noline":
             base_lora = os.path.join(lora_dir, f"copi-ki-base-boy_cnl_am31.safetensors")
-    elif mode_type == "girl_mode":
+    elif character_type == "girl_mode":
         if mode_inputs == "Lineart":
             base_lora = os.path.join(lora_dir, f"copi-ki-base-girl_ncl_am31.safetensors")
         elif mode_inputs == "Grayscale":
@@ -128,9 +128,9 @@ def setup_base_lora(mode_inputs, mode_type):
             base_lora = os.path.join(lora_dir, f"copi-ki-base-girl_cnl_am31.safetensors")
     return base_lora
 
-def simple_setup_caption(mode_inputs, mode_type):
+def simple_setup_caption(mode_inputs, character_type):
     # モードとタイプに応じたキャプションファイルの設定
-    if mode_type == "boy_mode":
+    if character_type == "boy_mode":
         if mode_inputs == "Lineart":
             caption_txt = os.path.join(caption_dir, "b_ncl.txt")
         elif mode_inputs == "Grayscale":
@@ -142,7 +142,7 @@ def simple_setup_caption(mode_inputs, mode_type):
         elif mode_inputs == "Color_noline":
             caption_txt = os.path.join(caption_dir, "b_cl.txt")
 
-    elif mode_type == "girl_mode":
+    elif character_type == "girl_mode":
         if mode_inputs == "Lineart":
             caption_txt = os.path.join(caption_dir, "g_ncl.txt")
         elif mode_inputs == "Grayscale":
@@ -169,21 +169,21 @@ def detail_setup_caption(caption_txt):
             with open(caption_size_txt, "w") as f2:
                 f2.write(f.read())
 
-def update_base_image(mode_type):
+def update_base_image(character_type):
     """選択されたモードとタイプに基づいて表示するベース画像を更新する関数"""
-    if mode_type == "boy_mode":
+    if character_type == "boy_mode":
         # boy_mode の場合、選択された mode に応じた画像を表示
         return boy_mode_paths.get("Color")
-    elif mode_type == "girl_mode":
+    elif character_type == "girl_mode":
         # girl_mode の場合、選択された mode に応じた画像を表示
         return girl_mode_paths.get("Color")
 
-def update_sample_image(mode, mode_type):
+def update_sample_image(mode, character_type):
     """選択されたモードとタイプに基づいて表示するサンプル画像を更新する関数"""
-    if mode_type == "boy_mode":
+    if character_type == "boy_mode":
         # boy_mode の場合、選択された mode に応じた画像を表示
         return boy_mode_paths.get(mode, boy_mode_paths["Lineart"])
-    elif mode_type == "girl_mode":
+    elif character_type == "girl_mode":
         # girl_mode の場合、選択された mode に応じた画像を表示
         return girl_mode_paths.get(mode, girl_mode_paths["Lineart"])
 
@@ -202,9 +202,9 @@ def find_free_port(start_port=7860):
             continue
     raise RuntimeError("No free ports available.")  # 空いているポートが見つからなかった場合
 
-def setup_base_lora(mode_inputs, mode_type):
+def setup_base_lora(mode_inputs, character_type):
     # モードとタイプに応じたベースLoRAの設定
-    if mode_type == "boy_mode":
+    if character_type == "boy_mode":
         if mode_inputs == "Lineart":
             base_lora = os.path.join(lora_dir, f"copi-ki-base-boy_ncl_am31.safetensors")
         elif mode_inputs == "Grayscale":
@@ -215,7 +215,7 @@ def setup_base_lora(mode_inputs, mode_type):
             base_lora = os.path.join(lora_dir, f"copi-ki-base-boy_cl_am31.safetensors")
         elif mode_inputs == "Color_noline":
             base_lora = os.path.join(lora_dir, f"copi-ki-base-boy_cnl_am31.safetensors")
-    elif mode_type == "girl_mode":
+    elif character_type == "girl_mode":
         if mode_inputs == "Lineart":
             base_lora = os.path.join(lora_dir, f"copi-ki-base-girl_ncl_am31.safetensors")
         elif mode_inputs == "Grayscale":
@@ -229,13 +229,13 @@ def setup_base_lora(mode_inputs, mode_type):
     return base_lora
 
 
-def simple_setup_caption(mode_inputs, mode_type):
+def simple_setup_caption(mode_inputs, character_type):
     # 事前にディレクトリの存在を確認して作成
     if not os.path.exists(image_1_dir):
         os.makedirs(image_1_dir)
 
     # モードとタイプに応じたキャプションファイルの設定
-    if mode_type == "boy_mode":
+    if character_type == "boy_mode":
         if mode_inputs == "Lineart":
             caption_txt = os.path.join(caption_dir, "b_ncl.txt")
         elif mode_inputs == "Grayscale":
@@ -247,7 +247,7 @@ def simple_setup_caption(mode_inputs, mode_type):
         elif mode_inputs == "Color_noline":
             caption_txt = os.path.join(caption_dir, "b_cl.txt")
 
-    elif mode_type == "girl_mode":
+    elif character_type == "girl_mode":
         if mode_inputs == "Lineart":
             caption_txt = os.path.join(caption_dir, "g_ncl.txt")
         elif mode_inputs == "Grayscale":
@@ -285,7 +285,7 @@ def analyze_tags(image_path):
     tag_text = tagger.analysis(image_path, tagger_dir, tagger_model)  # taggerモジュールのanalysis関数を使用
     return tag_text
 
-def simple_train(base_model, input_image_path, lora_name, mode_inputs, mode_type):
+def simple_train(base_model, input_image_path, lora_name, mode_inputs, character_type):
     if os.path.exists(image_1_dir):
         shutil.rmtree(image_1_dir)
     os.makedirs(image_1_dir)
@@ -296,13 +296,13 @@ def simple_train(base_model, input_image_path, lora_name, mode_inputs, mode_type
     output_dir = os.path.join(path, "output")
     
     input_image = Image.open(input_image_path)
-    base_lora = setup_base_lora(mode_inputs, mode_type)
+    base_lora = setup_base_lora(mode_inputs, character_type)
 
     for size in [1024, 768, 512]:
         resize_image = input_image.resize((size, size))
         resize_image.save(os.path.join(image_1_dir, f"{size}.png"))
 
-    simple_setup_caption(mode_inputs, mode_type)
+    simple_setup_caption(mode_inputs, character_type)
     base_model_path = os.path.join(sdxl_dir, base_model)
     #学習前にcache_latentsを作る
     cache_latents = os.path.join(sd_scripts_dir, 'tools/cache_latents.py')
@@ -679,7 +679,7 @@ def main():
                         sample_img = gr.Image(value=girl_mode_paths["Lineart"], label="Sample Image")
                     input_image_path = gr.Image(label="Input Image", type='filepath')
                     lora_name = gr.Textbox(label="LoRa Name", value="mylora")
-                    mode_type = gr.Dropdown(label="Mode Type", choices=["boy_mode", "girl_mode"], value="girl_mode")
+                    character_type = gr.Dropdown(label="Character Type", choices=["boy_mode", "girl_mode"], value="girl_mode")
                     mode_inputs = gr.Dropdown(label="Mode", choices=["Lineart", "Grayscale", "Grayscale_noline", "Color", "Color_noline"], value="Lineart")
                     simple_train_button = gr.Button("Train")
                 with gr.Column():
@@ -707,13 +707,13 @@ def main():
                 with gr.Column():
                     detail_output_file = gr.File(label="Download Output File")
 
-        mode_type.change(fn=update_base_image, inputs=[mode_type], outputs=base_img)
-        mode_inputs.change(fn=update_sample_image, inputs=[mode_inputs, mode_type], outputs=sample_img)
-        mode_type.change(fn=update_sample_image, inputs=[mode_inputs, mode_type], outputs=sample_img)
+        character_type.change(fn=update_base_image, inputs=[character_type], outputs=base_img)
+        mode_inputs.change(fn=update_sample_image, inputs=[mode_inputs, character_type], outputs=sample_img)
+        character_type.change(fn=update_sample_image, inputs=[mode_inputs, character_type], outputs=sample_img)
 
         simple_train_button.click(
             fn=simple_train,
-            inputs=[base_model, input_image_path, lora_name, mode_inputs, mode_type],
+            inputs=[base_model, input_image_path, lora_name, mode_inputs, character_type],
             outputs=simple_output_file
         )
 
