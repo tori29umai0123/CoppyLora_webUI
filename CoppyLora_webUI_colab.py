@@ -689,7 +689,7 @@ def main():
                 with gr.Column():
                     with gr.Row():
                         base_model = gr.Dropdown(label="Base Model", choices=base_model_options, value="animagine-xl-3.1.safetensors")
-                        update_button = gr.Button("更新")
+                        update_button = gr.Button("List Update")
 
                     with gr.Row():
                         detail_base_img_path = gr.Image(label="Detail Base Input Image", type='filepath')
