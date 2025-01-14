@@ -1,7 +1,7 @@
 pretrained_model_name_or_path = "models/animagine-xl-3.1.safetensors"
 train_data_dir = "train_data"
 output_dir = "models/LoRA"
-max_train_steps = 1000
+max_train_steps = 400
 network_module = "networks.lora"
 xformers = true
 gradient_checkpointing = true
@@ -10,12 +10,13 @@ max_data_loader_n_workers = 0
 enable_bucket = true
 save_model_as = "safetensors"
 lr_scheduler_num_cycles = 4
-learning_rate = 0.0001
+learning_rate = 5e-5
 resolution = "1024,1024"
 train_batch_size = 2
 network_dim = 16
 network_alpha = 16
-optimizer_type = "AdamW8bit"
+optimizer_type = "came_pytorch.CAME"
+optimizer_args = "weight_decay=1e-2" "betas=(0.9, 0.999, 0.9999)" "eps=(1e-30, 1e-16)"
 mixed_precision = "fp16"
 save_precision = "fp16"
 lr_scheduler = "constant"
