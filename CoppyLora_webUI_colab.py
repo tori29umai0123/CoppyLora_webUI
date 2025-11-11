@@ -88,7 +88,7 @@ def get_base_model_options():
 
 # base_model を選択肢として更新するための関数
 def update_base_model_options():
-    return gr.Dropdown.update(choices=get_base_model_options())
+    return gr.Dropdown(choices=get_base_model_options())
 
 def find_free_port(start_port=7860):
     """指定したポートから開始して空いているポートを見つけて返す関数"""
