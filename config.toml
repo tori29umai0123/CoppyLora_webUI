@@ -32,3 +32,4 @@ cache_text_encoder_outputs = true
 cache_text_encoder_outputs_to_disk = true
 fp8_base = true
 console_log_simple = true
+lowram = true

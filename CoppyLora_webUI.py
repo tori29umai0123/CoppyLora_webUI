@@ -222,8 +222,8 @@ def simple_train(base_model, input_image_path, lora_name, mode_inputs, character
     kari_lora_name = "copi-ki-kari"
     args_dict = {
         "pretrained_model_name_or_path": base_model_path,
-        "train_data_dir": config["train_data_dir"],
-        "output_dir": config["output_dir"],
+        "train_data_dir": os.path.join(path, config["train_data_dir"]),
+        "output_dir": os.path.join(path, config["output_dir"]),
         "output_name": kari_lora_name,
         "max_train_steps": config["max_train_steps"],
         "network_module": config["network_module"],
@@ -339,8 +339,8 @@ def detail_train(base_model, detail_lora_name, detail_base_img_path, detail_base
 
     args_dict = {
         "pretrained_model_name_or_path": base_model_path,
-        "train_data_dir": config["train_data_dir"],
-        "output_dir": config["output_dir"],
+        "train_data_dir": os.path.join(path, config["train_data_dir"]),
+        "output_dir": os.path.join(path, config["output_dir"]),
         "output_name": base_lora_name,
         "max_train_steps": config["max_train_steps"],
         "network_module": config["network_module"],
@@ -401,8 +401,8 @@ def detail_train(base_model, detail_lora_name, detail_base_img_path, detail_base
     kari_lora_name = "copi-ki-kari"
     args_dict = {
         "pretrained_model_name_or_path": base_model_path,
-        "train_data_dir": config["train_data_dir"],
-        "output_dir": config["output_dir"],
+        "train_data_dir": os.path.join(path, config["train_data_dir"]),
+        "output_dir": os.path.join(path, config["output_dir"]),
         "output_name": kari_lora_name,
         "max_train_steps": config["max_train_steps"],
         "network_module": config["network_module"],

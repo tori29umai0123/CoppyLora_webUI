@@ -4,6 +4,7 @@
 /models
 /train_data
 /sd-scripts
+/_models_backup
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
