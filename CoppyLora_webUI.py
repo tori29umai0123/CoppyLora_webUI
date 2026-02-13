@@ -40,6 +40,7 @@ sys.path.append(utils_path)
 
 import tagger
 import sdxl_train_network
+from strategy_base import TokenizeStrategy, TextEncodingStrategy, TextEncoderOutputsCachingStrategy, LatentsCachingStrategy
 
 # モジュールのパスを直接指定してインポート
 spec_merge = importlib.util.spec_from_file_location("merge", os.path.join(networks_path, 'sdxl_merge_lora.py'))
@@ -437,6 +438,12 @@ def detail_train(base_model, detail_lora_name, detail_base_img_path, detail_base
         "console_log_simple": config["console_log_simple"],
         "lowram": config["lowram"],
     }
+
+    # 1回目の学習でセットされたStrategyをリセット
+    TokenizeStrategy._strategy = None
+    TextEncodingStrategy._strategy = None
+    TextEncoderOutputsCachingStrategy._strategy = None
+    LatentsCachingStrategy._strategy = None
 
     parser = sdxl_train_network.setup_parser()
     args = parser.parse_args()
